@@ -9,6 +9,11 @@ import type { Role } from "@/generated/prisma/client";
  * Garante que existe um `User` no nosso banco com o mesmo `authUserId` —
  * cria sob demanda na primeira vez que a pessoa loga.
  *
+ * Na criação, tenta auto-linkar com um `Person` existente cujo `email`
+ * bata (case-insensitive) com o email autenticado, desde que esse Person
+ * ainda não esteja vinculado a outro User. Se houver múltiplos candidatos,
+ * NÃO faz o link automaticamente (deixa para o admin resolver).
+ *
  * Memoizado por request via React `cache`.
  */
 export const getCurrentUser = cache(async () => {
@@ -26,13 +31,43 @@ export const getCurrentUser = cache(async () => {
 
   if (existing) return existing;
 
-  return prisma.user.create({
-    data: {
-      authUserId: authUser.id,
-      email: authUser.email,
-      phone: authUser.phone,
-    },
-    include: { person: true },
+  const normalizedEmail = authUser.email?.trim().toLowerCase() ?? null;
+
+  return prisma.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: {
+        authUserId: authUser.id,
+        email: normalizedEmail,
+        phone: authUser.phone,
+      },
+    });
+
+    if (normalizedEmail) {
+      const candidates = await tx.person.findMany({
+        where: {
+          userId: null,
+          email: { equals: normalizedEmail, mode: "insensitive" },
+        },
+        select: { id: true },
+        take: 2,
+      });
+
+      if (candidates.length === 1) {
+        await tx.person.update({
+          where: { id: candidates[0].id },
+          data: { userId: newUser.id },
+        });
+      } else if (candidates.length > 1) {
+        console.warn(
+          `[auth] Auto-link skipped: múltiplos Persons (${candidates.length}+) com email ${normalizedEmail}. Resolva manualmente.`,
+        );
+      }
+    }
+
+    return tx.user.findUniqueOrThrow({
+      where: { id: newUser.id },
+      include: { person: true },
+    });
   });
 });
 

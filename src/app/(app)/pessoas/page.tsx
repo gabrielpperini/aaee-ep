@@ -47,6 +47,7 @@ export default async function PeoplePage() {
                 <TableHead>Nome</TableHead>
                 <TableHead>Apelido</TableHead>
                 <TableHead>Telefone</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Participação</TableHead>
                 <TableHead>Modalidades</TableHead>
                 <TableHead className="w-12" />
@@ -66,6 +67,9 @@ export default async function PeoplePage() {
                     <TableCell className="text-muted-foreground">{p.nickname || "—"}</TableCell>
                     <TableCell className="text-muted-foreground tabular-nums">
                       {p.phone || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {p.email || "—"}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -97,6 +101,7 @@ export default async function PeoplePage() {
                           id: p.id,
                           name: p.name,
                           nickname: p.nickname,
+                          email: p.email,
                           phone: p.phone,
                           isAthlete: p.isAthlete,
                           isSupporter: p.isSupporter,

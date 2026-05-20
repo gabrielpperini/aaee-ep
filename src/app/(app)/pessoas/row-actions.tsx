@@ -18,6 +18,7 @@ type Props = {
     id: string;
     name: string;
     nickname: string | null;
+    email: string | null;
     phone: string | null;
     isAthlete: boolean;
     isSupporter: boolean;
@@ -46,6 +47,7 @@ export function PersonRowActions({ person, modalities }: Props) {
     id: person.id,
     name: person.name,
     nickname: person.nickname ?? "",
+    email: person.email ?? "",
     phone: person.phone ?? "",
     isAthlete: person.isAthlete,
     isSupporter: person.isSupporter,

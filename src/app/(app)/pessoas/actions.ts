@@ -9,6 +9,7 @@ const PersonSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, "Nome é obrigatório").max(120),
   nickname: z.string().max(60).optional().or(z.literal("")),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().max(40).optional().or(z.literal("")),
   isAthlete: z.boolean().default(false),
   isSupporter: z.boolean().default(true),
@@ -29,10 +30,11 @@ export async function savePerson(input: PersonFormValues): Promise<ActionResult>
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
   }
 
-  const { id, modalityIds, name, nickname, phone, notes, ...flags } = parsed.data;
+  const { id, modalityIds, name, nickname, email, phone, notes, ...flags } = parsed.data;
   const data = {
     name,
     nickname: nickname?.trim() || null,
+    email: email?.trim().toLowerCase() || null,
     phone: phone?.trim() || null,
     notes: notes?.trim() || null,
     ...flags,

@@ -24,15 +24,22 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 ### Entregas
 
 - [x] Estrutura do projeto Next.js + Supabase + Prisma
-- [ ] Autenticação via Supabase Auth (magic link / OTP por email)
-- [ ] Modelo de permissões: `user`, `director`, `admin`
-- [ ] CRUD de Pessoas (atletas, torcida, apoio, diretores)
-- [ ] CRUD de Modalidades
-- [ ] CRUD de Locais
-- [ ] CRUD de Eventos (jogos, lutas, provas, atividades)
-- [ ] Visualização da agenda dos 3 dias (lista + filtros básicos)
-- [ ] Layout do app com sidebar e gating por role
-- [ ] README com instruções de setup
+- [x] Autenticação via Supabase Auth (OTP por email)
+- [x] Modelo de permissões: `USER`, `DIRECTOR`, `ADMIN`
+- [x] CRUD de Pessoas (atletas, torcida, apoio, diretores)
+- [x] CRUD de Modalidades
+- [x] CRUD de Locais
+- [x] CRUD de Eventos (jogos, lutas, provas, atividades)
+- [x] Visualização da agenda dos 3 dias (lista + filtro por dia)
+- [x] Layout do app com sidebar e gating por role
+- [x] README com instruções de setup
+- [x] Deploy em produção (Vercel)
+
+### Refinamentos pós-checklist (também entregues)
+
+- [x] **Auto-linking User ↔ Person no primeiro login** por email (case-insensitive); se houver múltiplos candidatos, log de warning e o admin resolve manualmente.
+- [x] **Gestão de usuários em `/admin/usuarios`** (só ADMIN): troca de role, link/unlink com Person, proteção contra auto-rebaixamento.
+- [x] **Tela `/perfil`** ("Meu perfil"): usuário comum vê email/role e edita seus dados (nome, apelido, email, telefone, modalidades). Cria Person automaticamente se ainda não existir, sem permitir auto-promoção de role/flags.
 
 ### Entidades cobertas
 

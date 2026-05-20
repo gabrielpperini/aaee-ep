@@ -36,6 +36,7 @@ const FLAG_FIELDS = [
 const DEFAULTS: PersonFormValues = {
   name: "",
   nickname: "",
+  email: "",
   phone: "",
   isAthlete: false,
   isSupporter: true,
@@ -95,6 +96,14 @@ export function PersonDialog({ open, onOpenChange, modalities, initial }: Props)
                 <Label htmlFor="phone">Telefone</Label>
                 <Input id="phone" {...register("phone")} />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" {...register("email")} />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">

@@ -83,6 +83,7 @@ model Person {
   userId      String?  @unique
   name        String
   nickname    String?
+  email       String?  // usado para auto-linking com User no primeiro login
   phone       String?
   isAthlete   Boolean  @default(false)
   isSupporter Boolean  @default(true)
@@ -97,6 +98,7 @@ model Person {
   modalityAthlete ModalityAthlete[]
 
   @@index([name])
+  @@index([email])
 }
 
 /// Modalidade esportiva ou tipo de evento.

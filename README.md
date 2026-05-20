@@ -78,6 +78,8 @@ UPDATE "User" SET role = 'ADMIN' WHERE email = 'seu@email.com';
 
 Depois recarregue o app — o menu lateral passará a mostrar Pessoas, Modalidades, Locais e Eventos.
 
+> Dica: a partir desta versão, se você cadastrar a **Pessoa** com o email correto **antes** dela logar pela primeira vez, o vínculo `User ↔ Person` é feito automaticamente no primeiro login (match por email, case-insensitive). Útil para já deixar diretores/atletas pré-cadastrados.
+
 ## Estrutura
 
 ```

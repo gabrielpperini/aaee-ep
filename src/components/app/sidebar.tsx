@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, Users, Trophy, MapPin, LayoutDashboard, LogOut, Volleyball } from "lucide-react";
+import {
+  Calendar,
+  Users,
+  Trophy,
+  MapPin,
+  LayoutDashboard,
+  LogOut,
+  Volleyball,
+  UserCircle,
+  Shield,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/auth/actions";
@@ -20,10 +30,12 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/", label: "Início", icon: LayoutDashboard },
   { href: "/agenda", label: "Agenda", icon: Calendar },
+  { href: "/perfil", label: "Meu perfil", icon: UserCircle },
   { href: "/eventos", label: "Eventos", icon: Volleyball, minRole: "DIRECTOR" },
   { href: "/pessoas", label: "Pessoas", icon: Users, minRole: "DIRECTOR" },
   { href: "/modalidades", label: "Modalidades", icon: Trophy, minRole: "DIRECTOR" },
   { href: "/locais", label: "Locais", icon: MapPin, minRole: "DIRECTOR" },
+  { href: "/admin/usuarios", label: "Usuários", icon: Shield, minRole: "ADMIN" },
 ];
 
 function hasAccess(role: Role, minRole?: Role) {
