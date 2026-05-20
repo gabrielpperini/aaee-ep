@@ -1,0 +1,187 @@
+// App de Gestão da Delegação e Torcida — EP Engenharia UFRGS
+// Schema cobrindo o MVP 1 (cadastros + agenda) com gancho para MVP 2 (operação).
+// Veja ROADMAP.md para o detalhamento das fases.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Enums
+// ============================================================
+
+enum Role {
+  USER
+  DIRECTOR
+  ADMIN
+}
+
+enum EventStatus {
+  CONFIRMED   // confirmado
+  POSSIBLE    // possível / condicionado
+  IN_PROGRESS // em andamento
+  FINISHED    // finalizado
+  CANCELLED   // cancelado
+  POSTPONED   // adiado
+}
+
+enum EventPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum EventPhase {
+  GROUP        // fase de grupos / classificatória
+  ROUND_OF_16
+  QUARTER
+  SEMI
+  FINAL
+  THIRD_PLACE
+  HEAT         // bateria
+  ELIMINATORY  // eliminatória
+  OTHER
+}
+
+enum ModalityCategory {
+  SPORT       // esporte
+  CULTURAL    // cultural
+  CHEERING    // atividade de torcida
+  LOGISTICS   // deslocamento / logística
+  GENERAL     // evento geral da delegação
+}
+
+// ============================================================
+// Modelos
+// ============================================================
+
+/// Conta de login. Mapeia 1:1 com auth.users do Supabase via `authUserId`.
+model User {
+  id         String   @id @default(cuid())
+  authUserId String?  @unique // uuid do Supabase auth.users
+  email      String?  @unique
+  phone      String?
+  role       Role     @default(USER)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  person Person?
+
+  @@index([authUserId])
+}
+
+/// Pessoa da delegação. Pode ou não estar vinculada a um User (login).
+/// Permite cadastrar antes da pessoa criar conta.
+model Person {
+  id          String   @id @default(cuid())
+  userId      String?  @unique
+  name        String
+  nickname    String?
+  phone       String?
+  isAthlete   Boolean  @default(false)
+  isSupporter Boolean  @default(true)
+  isDirector  Boolean  @default(false)
+  isSupport   Boolean  @default(false) // membro de apoio
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  athleteIn       EventAthlete[]
+  modalityAthlete ModalityAthlete[]
+
+  @@index([name])
+}
+
+/// Modalidade esportiva ou tipo de evento.
+model Modality {
+  id        String           @id @default(cuid())
+  name      String           @unique
+  category  ModalityCategory @default(SPORT)
+  priority  EventPriority    @default(NORMAL)
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  events    Event[]
+  athletes  ModalityAthlete[]
+}
+
+/// Vinculação atleta <-> modalidade (uma pessoa pode competir em várias).
+model ModalityAthlete {
+  modalityId String
+  personId   String
+
+  modality Modality @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+  person   Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([modalityId, personId])
+}
+
+/// Local onde acontecem os eventos.
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  description String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events Event[]
+}
+
+/// Evento: jogo, luta, prova, bateria, atividade da torcida etc.
+/// Horários armazenados como DateTime UTC; "day" derivado é redundante mas útil.
+model Event {
+  id                     String        @id @default(cuid())
+  modalityId             String
+  title                  String
+  description            String?
+  day                    Int           // 1, 2 ou 3
+  startTime              DateTime
+  endTime                DateTime
+  locationId             String?
+  opponent               String?
+  phase                  EventPhase    @default(OTHER)
+  priority               EventPriority @default(NORMAL)
+  status                 EventStatus   @default(CONFIRMED)
+  isConditional          Boolean       @default(false)
+  desiredSupportersCount Int           @default(0)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  modality Modality       @relation(fields: [modalityId], references: [id], onDelete: Restrict)
+  location Location?      @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  athletes EventAthlete[]
+
+  @@index([day, startTime])
+  @@index([modalityId])
+  @@index([status])
+}
+
+/// Atletas envolvidos em um evento específico (ex: o time daquela partida).
+model EventAthlete {
+  eventId  String
+  personId String
+
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, personId])
+}
+
+// ============================================================
+// Fases futuras (esqueleto)
+// ============================================================
+// MVP 2 — AvailabilitySlot, Assignment, CheckIn
+// MVP 3 — Material, SyncOperation
+//
+// Modelos comentados intencionalmente para não inflar a primeira migration.
+// Serão adicionados quando começar a fase correspondente.
