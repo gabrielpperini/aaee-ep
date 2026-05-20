@@ -107,6 +107,31 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 ---
 
+## Estilo e identidade visual (transversal)
+
+**Objetivo:** Aplicar a identidade visual da AAEE Engenharia UFRGS em todo o app, com suporte a tema claro/escuro.
+
+### Paleta (extraída do logo)
+
+| Token | Valor                          | Uso                                   |
+|-------|--------------------------------|---------------------------------------|
+| Navy  | `#0F1F33` / `oklch(0.20 0.04 245)` | Background dark, foreground light       |
+| Teal  | `#4A8FA6` / `oklch(0.62 0.08 220)` | Primary actions, highlights, ring     |
+| Cream | `#EDE5D0` / `oklch(0.93 0.02 85)`  | Foreground dark, surfaces sutis light |
+
+### Entregas
+
+- [x] shadcn/ui (Base UI) instalado e configurado
+- [x] Toggle de tema claro/escuro (next-themes)
+- [x] Paleta customizada em `globals.css` com tokens navy/teal/cream
+- [x] Logo da AAEE na sidebar (compacto) e na tela de login (grande)
+- [ ] Adicionar `public/logo.png` (ainda pendente — gabriel)
+- [ ] Favicon usando o brasão (substituir o `favicon.ico` padrão do Next)
+- [ ] Open Graph image para previews em link sharing
+- [ ] Splash screen do PWA (na fase 3) com o logo
+
+---
+
 ## Pós-MVP — Possíveis evoluções
 
 - Importação de tabela oficial do EP (CSV/Excel)

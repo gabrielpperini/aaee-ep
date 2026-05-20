@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrandMark } from "@/components/brand-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Step = "email" | "otp";
@@ -65,10 +67,14 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center p-6">
+    <div className="relative flex flex-1 items-center justify-center p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Delegação EP</CardTitle>
+        <CardHeader className="items-center text-center">
+          <BrandMark size={88} priority className="mb-3" />
+          <CardTitle className="text-xl">Delegação EP</CardTitle>
           <CardDescription>
             {step === "email"
               ? "Informe seu email para receber um código de acesso."

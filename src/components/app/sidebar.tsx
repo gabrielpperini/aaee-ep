@@ -6,6 +6,8 @@ import { Calendar, Users, Trophy, MapPin, LayoutDashboard, LogOut, Volleyball } 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/auth/actions";
+import { BrandMark } from "@/components/brand-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { Role } from "@/generated/prisma/client";
 
 type NavItem = {
@@ -35,12 +37,15 @@ export function Sidebar({ role, name }: { role: Role; name: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-60 flex-col border-r bg-card">
-      <div className="px-5 py-5 border-b">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Engenharia UFRGS
-        </p>
-        <p className="font-semibold">Delegação EP</p>
+    <aside className="flex w-60 flex-col border-r bg-sidebar text-sidebar-foreground">
+      <div className="flex items-center gap-3 px-5 py-4 border-b">
+        <BrandMark size={40} priority />
+        <div className="min-w-0">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground leading-tight">
+            Engenharia UFRGS
+          </p>
+          <p className="font-semibold leading-tight">Delegação EP</p>
+        </div>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
@@ -65,11 +70,12 @@ export function Sidebar({ role, name }: { role: Role; name: string }) {
         })}
       </nav>
 
-      <div className="border-t px-3 py-3 space-y-2">
-        <div className="px-2">
+      <div className="border-t px-3 py-3 space-y-1">
+        <div className="px-2 pb-1">
           <p className="text-sm font-medium truncate">{name}</p>
           <p className="text-xs text-muted-foreground">{roleLabel(role)}</p>
         </div>
+        <ThemeToggle className="w-full justify-start" />
         <form action={signOut}>
           <Button type="submit" variant="ghost" size="sm" className="w-full justify-start">
             <LogOut className="h-4 w-4 mr-2" />
