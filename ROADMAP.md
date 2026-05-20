@@ -53,6 +53,29 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 ### Entregas
 
+#### Cadastro e onboarding
+
+- [ ] Auth com **email + senha** (Supabase) como método principal
+- [ ] Manter **OTP por email** como alternativa ("Entrar com código no email")
+- [ ] Fluxo "Esqueci a senha" via magic link/OTP
+- [ ] Tela de **cadastro** (`/signup`) coletando upfront:
+  - Nome completo
+  - Apelido (como quer ser chamado)
+  - Telefone (WhatsApp)
+  - Curso (Civil, Elétrica, Mecânica, Computação, Controle e Automação, Materiais, Cartográfica, Energia, Metalúrgica, Química, Produção, Ambiental, Física)
+  - Semestre (1–10)
+  - Email + senha
+- [ ] No submit do cadastro: cria `auth.users` no Supabase + `User` + `Person` (com flag `isSupporter=true` por padrão) numa transação. Auto-link como já existe.
+- [ ] Validações:
+  - Senha mínima 8 caracteres, com pelo menos 1 letra + 1 número
+  - Email único (Supabase + nosso User)
+  - Telefone formato brasileiro (máscara `(51) 99999-9999`)
+- [ ] Tela `/perfil` ganha campos curso/semestre (read+edit)
+- [ ] `/admin/usuarios` mostra curso/semestre na listagem
+- [ ] Schema: adicionar `Person.course` (enum) e `Person.semester` (Int?) — migration
+
+#### Operação da torcida (núcleo do MVP 2)
+
 - [ ] Tela "Minha disponibilidade" com slots de 30min em 3 dias
 - [ ] Bloqueio automático de slots em que a pessoa compete (cruza `Event.athletes`)
 - [ ] Tela de alocação de torcida para diretores
@@ -73,11 +96,17 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 `AvailabilitySlot`, `Assignment`, `CheckIn`.
 
+### Mudanças de schema
+
+- `Person.course` (enum `Course` com os cursos da Engenharia UFRGS)
+- `Person.semester` (Int opcional, 1–10)
+
 ### Regras-chave a implementar
 
 - Uma pessoa não pode estar alocada em dois eventos no mesmo horário (alerta)
 - Atleta competindo aparece como indisponível para torcida no mesmo slot
 - Disponibilidade pode ser sobrescrita pela própria pessoa
+- Senha é gerenciada pelo Supabase Auth (nunca chega ao nosso banco)
 
 ---
 
