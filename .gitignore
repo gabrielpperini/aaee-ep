@@ -46,5 +46,6 @@ next-env.d.ts
 # Playwright MCP runtime (snapshots/logs)
 .playwright-mcp/
 
-# Screenshots de teste no root (não comitar)
+# Screenshots de teste (incluindo Playwright)
+/screenshots/
 /*.png
