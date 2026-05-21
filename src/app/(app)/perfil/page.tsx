@@ -45,6 +45,7 @@ export default async function ProfilePage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Painel · Você"
         title="Meu perfil"
         description="Suas informações e participação na delegação."
       />

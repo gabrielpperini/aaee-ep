@@ -4,17 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ArrowRight, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { BrandMark } from "@/components/brand-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -56,14 +49,12 @@ export default function SignupPage() {
       return;
     }
 
-    // Se confirmação por email estiver habilitada no Supabase, não vem sessão.
     if (!data.session) {
       setLoading(false);
       setEmailSent(true);
       return;
     }
 
-    // Sessão ativa → completa o cadastro no nosso banco (User + Person).
     const result = await setupNewAccount({ name });
     setLoading(false);
 
@@ -79,110 +70,182 @@ export default function SignupPage() {
     router.refresh();
   }
 
-  if (emailSent) {
-    return (
-      <div className="relative flex flex-1 items-center justify-center p-6">
+  return (
+    <div className="relative flex flex-1 min-h-screen">
+      <BrandSide />
+      <div className="relative flex flex-1 items-center justify-center p-5 sm:p-8">
         <div className="absolute top-4 right-4">
           <ThemeToggle />
         </div>
-        <Card className="w-full max-w-md">
-          <CardHeader className="items-center text-center">
-            <BrandMark size={88} priority className="mb-3" />
-            <CardTitle>Confirme seu email</CardTitle>
-            <CardDescription>
-              Enviamos um link para <strong>{email}</strong>. Clique nele para ativar sua conta —
-              depois você consegue entrar com a senha que acabou de criar.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter className="justify-center">
-            <Link href="/login" className="text-sm text-primary hover:underline">
-              Voltar para o login
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
 
-  return (
-    <div className="relative flex flex-1 items-center justify-center p-6">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
-      <Card className="w-full max-w-md">
-        <CardHeader className="items-center text-center">
-          <BrandMark size={72} priority className="mb-2" />
-          <CardTitle className="text-xl">Criar conta</CardTitle>
-          <CardDescription>Junte-se à delegação da Engenharia UFRGS no EP.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <Input
-                id="name"
-                required
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Maria Silva"
-              />
+        {emailSent ? (
+          <div className="w-full max-w-md text-center rise-in">
+            <div className="mb-6 flex flex-col items-center">
+              <div className="grid h-16 w-16 place-items-center rounded-2xl border border-gold/40 bg-gold/15 text-foreground">
+                <MailCheck className="h-7 w-7" />
+              </div>
+              <h1 className="mt-5 font-display text-3xl sm:text-4xl font-semibold tracking-tight">
+                Confirme seu email
+              </h1>
+              <p className="mt-3 max-w-sm text-pretty text-muted-foreground">
+                Enviamos um link para <strong className="text-foreground">{email}</strong>.
+                Clique nele para ativar sua conta — depois você entra com a senha que acabou de criar.
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@email.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                autoComplete="new-password"
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm">Confirmar senha</Label>
-              <Input
-                id="confirm"
-                type="password"
-                required
-                autoComplete="new-password"
-                minLength={8}
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || !name || !email || !password}
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
             >
-              {loading ? "Criando…" : "Criar conta"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground">
-            Já tem conta?{" "}
-            <Link href="/login" className="text-primary hover:underline font-medium">
-              Entrar
+              Voltar para o login
+              <ArrowRight className="h-4 w-4" />
             </Link>
-          </p>
-        </CardFooter>
-      </Card>
+          </div>
+        ) : (
+          <div className="w-full max-w-md rise-in">
+            <div className="mb-8 flex flex-col items-center text-center lg:hidden">
+              <BrandMark size={64} priority className="rounded-xl ring-1 ring-border" />
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                AAEE · Engenharia UFRGS
+              </p>
+              <p className="font-display text-2xl font-semibold tracking-tight">
+                Delegação EP
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Criar conta
+              </p>
+              <h1 className="mt-2 font-display text-3xl sm:text-4xl font-semibold leading-tight tracking-tight text-balance">
+                Junte-se à delegação.
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground text-pretty">
+                Cadastro rápido pra atletas, torcida, apoio e diretoria.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome completo</Label>
+                <Input
+                  id="name"
+                  required
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Maria Silva"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="voce@email.com"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    autoComplete="new-password"
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="mín. 8 caracteres"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm">Confirmar</Label>
+                  <Input
+                    id="confirm"
+                    type="password"
+                    required
+                    autoComplete="new-password"
+                    minLength={8}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || !name || !email || !password}
+              >
+                {loading ? "Criando…" : "Criar conta"}
+                {!loading && <ArrowRight className="ml-1 h-4 w-4" />}
+              </Button>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Já tem conta?{" "}
+              <Link href="/login" className="font-semibold text-primary hover:underline">
+                Entrar
+              </Link>
+            </p>
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+function BrandSide() {
+  return (
+    <aside className="relative hidden lg:flex w-[44%] max-w-[640px] flex-col justify-between overflow-hidden bg-sidebar text-sidebar-foreground p-10">
+      <div aria-hidden className="grain" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(800px circle at 0% 0%, color-mix(in oklch, var(--sidebar-primary) 35%, transparent), transparent 55%), radial-gradient(700px circle at 100% 100%, color-mix(in oklch, var(--primary) 50%, transparent), transparent 60%)",
+        }}
+      />
+      <div aria-hidden className="field-lines pointer-events-none absolute inset-0 text-sidebar-foreground/40 opacity-[0.14]" />
+
+      <div className="relative z-10 flex items-center gap-3">
+        <BrandMark size={48} priority className="rounded-xl ring-1 ring-sidebar-border" />
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-primary">
+            AAEE · UFRGS
+          </p>
+          <p className="font-display text-xl font-semibold leading-tight tracking-tight">
+            Delegação EP
+          </p>
+        </div>
+      </div>
+
+      <div className="relative z-10 max-w-sm">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-primary">
+          Convocação aberta
+        </p>
+        <h2 className="mt-3 font-display text-5xl xl:text-6xl font-semibold leading-[0.95] tracking-tight text-balance">
+          Faça parte do{" "}
+          <span className="relative inline-block">
+            <span className="relative z-10">time</span>
+            <span aria-hidden className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-gold/70" />
+          </span>
+          .
+        </h2>
+        <p className="mt-5 text-sm text-sidebar-foreground/75 text-pretty">
+          Atletas, torcida, apoio e diretoria — todo mundo cabe no painel. Você se cadastra,
+          a gente sincroniza com o time da delegação.
+        </p>
+      </div>
+
+      <div className="relative z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/55">
+        <span>EP · 2026</span>
+        <span>cadastro · 30s</span>
+      </div>
+    </aside>
   );
 }

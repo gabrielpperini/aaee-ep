@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-display: var(--font-bricolage), var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-bricolage), var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,6 +40,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,90 +51,195 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Paleta extraída visualmente do brasão AAEE Engenharia UFRGS:
- *   Navy profundo  #0B1424  oklch(0.16 0.035 250)  — base do brasão
- *   Navy médio     #1D2D43  oklch(0.26 0.045 248)  — sombra/cartões dark
- *   Slate azulado  #506C7E  oklch(0.50 0.040 235)  — engrenagem
- *   Creme          #EAE0CC  oklch(0.91 0.025 82)   — texto sobre navy
+/* Paleta extraída do brasão AAEE Engenharia UFRGS:
+ *   Navy profundo  #0B1424  — base do brasão
+ *   Navy médio     #1D2D43  — sombra/cartões dark
+ *   Slate azulado  #506C7E  — engrenagem
+ *   Creme          #EAE0CC  — texto sobre navy
+ *   Ouro vitória   #E0A030  — accent de campeonato
  */
 
 :root {
-  --background: oklch(0.965 0.012 85);          /* cream desaturado */
-  --foreground: oklch(0.22 0.07 245);            /* navy */
+  --background: oklch(0.965 0.014 82);
+  --foreground: oklch(0.18 0.06 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.07 245);
+  --card-foreground: oklch(0.18 0.06 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.07 245);
-  --primary: oklch(0.42 0.14 245);              /* AZUL principal (mid-navy saturado) */
-  --primary-foreground: oklch(0.97 0.012 85);   /* cream */
+  --popover-foreground: oklch(0.18 0.06 250);
+  --primary: oklch(0.32 0.12 248);
+  --primary-foreground: oklch(0.97 0.014 82);
   --secondary: oklch(0.93 0.018 240);
-  --secondary-foreground: oklch(0.30 0.10 245);
-  --muted: oklch(0.94 0.012 240);
-  --muted-foreground: oklch(0.48 0.04 240);
-  --accent: oklch(0.55 0.13 235);                /* azul médio para hover/destaques */
-  --accent-foreground: oklch(0.97 0.012 85);
+  --secondary-foreground: oklch(0.28 0.10 248);
+  --muted: oklch(0.945 0.012 240);
+  --muted-foreground: oklch(0.46 0.04 240);
+  --accent: oklch(0.50 0.14 240);
+  --accent-foreground: oklch(0.97 0.014 82);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.87 0.022 240);
-  --input: oklch(0.87 0.022 240);
-  --ring: oklch(0.42 0.14 245);
-  --chart-1: oklch(0.42 0.14 245);
+  --border: oklch(0.88 0.020 240);
+  --input: oklch(0.88 0.020 240);
+  --ring: oklch(0.32 0.12 248);
+  --gold: oklch(0.78 0.14 78);
+  --gold-foreground: oklch(0.22 0.07 80);
+  --chart-1: oklch(0.32 0.12 248);
   --chart-2: oklch(0.62 0.14 230);
-  --chart-3: oklch(0.30 0.10 248);
+  --chart-3: oklch(0.78 0.14 78);
   --chart-4: oklch(0.74 0.10 220);
-  --chart-5: oklch(0.78 0.04 80);
+  --chart-5: oklch(0.46 0.10 245);
   --radius: 0.625rem;
-  --sidebar: oklch(0.95 0.018 240);
-  --sidebar-foreground: oklch(0.22 0.07 245);
-  --sidebar-primary: oklch(0.42 0.14 245);
-  --sidebar-primary-foreground: oklch(0.97 0.012 85);
-  --sidebar-accent: oklch(0.90 0.025 240);
-  --sidebar-accent-foreground: oklch(0.30 0.10 245);
-  --sidebar-border: oklch(0.85 0.022 240);
-  --sidebar-ring: oklch(0.42 0.14 245);
+  --sidebar: oklch(0.16 0.05 250);
+  --sidebar-foreground: oklch(0.93 0.018 82);
+  --sidebar-primary: oklch(0.78 0.14 78);
+  --sidebar-primary-foreground: oklch(0.18 0.06 250);
+  --sidebar-accent: oklch(0.24 0.06 248);
+  --sidebar-accent-foreground: oklch(0.97 0.014 82);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.78 0.14 78);
 }
 
 .dark {
-  --background: oklch(0.18 0.05 248);            /* navy profundo do brasão */
-  --foreground: oklch(0.92 0.022 85);            /* creme */
-  --card: oklch(0.24 0.06 246);                  /* navy médio */
-  --card-foreground: oklch(0.92 0.022 85);
-  --popover: oklch(0.24 0.06 246);
-  --popover-foreground: oklch(0.92 0.022 85);
-  --primary: oklch(0.70 0.14 235);               /* AZUL principal clareado pra dark */
+  --background: oklch(0.14 0.045 252);
+  --foreground: oklch(0.93 0.018 82);
+  --card: oklch(0.20 0.055 250);
+  --card-foreground: oklch(0.93 0.018 82);
+  --popover: oklch(0.22 0.055 250);
+  --popover-foreground: oklch(0.93 0.018 82);
+  --primary: oklch(0.78 0.14 78);
   --primary-foreground: oklch(0.16 0.05 250);
-  --secondary: oklch(0.28 0.06 246);
-  --secondary-foreground: oklch(0.92 0.022 85);
-  --muted: oklch(0.26 0.05 246);
+  --secondary: oklch(0.26 0.05 248);
+  --secondary-foreground: oklch(0.93 0.018 82);
+  --muted: oklch(0.24 0.05 250);
   --muted-foreground: oklch(0.72 0.04 220);
-  --accent: oklch(0.36 0.09 240);
-  --accent-foreground: oklch(0.92 0.022 85);
+  --accent: oklch(0.34 0.09 240);
+  --accent-foreground: oklch(0.93 0.018 82);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.70 0.14 235);
-  --chart-1: oklch(0.70 0.14 235);
-  --chart-2: oklch(0.55 0.13 240);
-  --chart-3: oklch(0.82 0.06 220);
-  --chart-4: oklch(0.42 0.10 245);
-  --chart-5: oklch(0.86 0.03 80);
-  --sidebar: oklch(0.15 0.05 250);                /* um pouco mais escuro que o bg */
-  --sidebar-foreground: oklch(0.92 0.022 85);
-  --sidebar-primary: oklch(0.70 0.14 235);
-  --sidebar-primary-foreground: oklch(0.16 0.05 250);
-  --sidebar-accent: oklch(0.24 0.06 246);
-  --sidebar-accent-foreground: oklch(0.92 0.022 85);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.70 0.14 235);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.78 0.14 78);
+  --gold: oklch(0.82 0.15 80);
+  --gold-foreground: oklch(0.16 0.05 250);
+  --chart-1: oklch(0.78 0.14 78);
+  --chart-2: oklch(0.62 0.14 235);
+  --chart-3: oklch(0.86 0.04 80);
+  --chart-4: oklch(0.55 0.13 240);
+  --chart-5: oklch(0.42 0.10 248);
+  --sidebar: oklch(0.11 0.05 252);
+  --sidebar-foreground: oklch(0.93 0.018 82);
+  --sidebar-primary: oklch(0.82 0.15 80);
+  --sidebar-primary-foreground: oklch(0.14 0.05 252);
+  --sidebar-accent: oklch(0.22 0.055 250);
+  --sidebar-accent-foreground: oklch(0.93 0.018 82);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.82 0.15 80);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
-    @apply font-sans;
+    font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    background-image:
+      radial-gradient(
+        1100px circle at 12% -10%,
+        color-mix(in oklch, var(--primary) 18%, transparent) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        900px circle at 110% 0%,
+        color-mix(in oklch, var(--gold) 14%, transparent) 0%,
+        transparent 55%
+      );
+    background-attachment: fixed;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(
+        1100px circle at 8% -10%,
+        color-mix(in oklch, var(--primary) 30%, transparent) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        900px circle at 110% 4%,
+        color-mix(in oklch, var(--gold) 18%, transparent) 0%,
+        transparent 55%
+      );
+  }
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-bricolage), var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-bricolage), var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.025em;
+  }
+  .font-mono {
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  }
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+
+  /* Grain overlay — very subtle film noise, ties the atmosphere together */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-size: 160px 160px;
+  }
+
+  /* Geometric "field line" grid for hero blocks */
+  .field-lines {
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, currentColor 8%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, currentColor 8%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* Staggered fade-in for page loads */
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .rise-in {
+    animation: rise-in 0.55s cubic-bezier(0.2, 0.65, 0.3, 1) both;
+  }
+  .rise-delay-1 { animation-delay: 0.05s; }
+  .rise-delay-2 { animation-delay: 0.12s; }
+  .rise-delay-3 { animation-delay: 0.2s; }
+  .rise-delay-4 { animation-delay: 0.28s; }
+  .rise-delay-5 { animation-delay: 0.36s; }
+
+  /* Stencil-style block numerals for day brackets */
+  .stencil-number {
+    font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 800;
+    font-variation-settings: "wdth" 75;
+    letter-spacing: -0.04em;
+    line-height: 0.85;
+  }
+
+  /* Diagonal stripe ribbon (used as decorative element) */
+  .stripes-gold {
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--gold) 0 6px,
+      transparent 6px 14px
+    );
+  }
+
+  /* Hide scrollbars but keep functionality */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
 }

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -10,6 +10,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { NewLocationButton } from "./new-location-button";
 import { LocationRowActions } from "./row-actions";
 
@@ -24,19 +25,19 @@ export default async function LocationsPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Gestão · Mapa do EP"
         title="Locais"
         description="Locais físicos onde acontecem os eventos do EP."
         actions={<NewLocationButton />}
       />
 
       {locations.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhum local cadastrado.
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Nenhum local cadastrado"
+          description="Cadastre quadras, ginásios e pontos de encontro da delegação."
+        />
       ) : (
-        <Card>
+        <Card className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>

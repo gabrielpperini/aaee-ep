@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/app/empty-state";
 import {
   Table,
   TableBody,
@@ -47,18 +48,18 @@ export default async function AdminUsersPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Administração · Contas"
         title="Usuários"
         description="Contas que já entraram no app. Gerencie funções e vínculo com pessoas da delegação."
       />
 
       {users.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhum usuário cadastrado ainda.
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Nenhum usuário cadastrado"
+          description="Os usuários aparecem aqui assim que entrarem pela primeira vez."
+        />
       ) : (
-        <Card>
+        <Card className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>

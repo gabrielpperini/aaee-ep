@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -20,6 +20,7 @@ import {
   toDatetimeLocal,
 } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { NewEventButton } from "./new-event-button";
 import { EventRowActions } from "./row-actions";
 import type { EventFormValues } from "./actions";
@@ -48,6 +49,7 @@ export default async function EventsPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Gestão · Programação"
         title="Eventos"
         description="Programação completa do EP — jogos, lutas, provas e atividades."
         actions={
@@ -56,13 +58,12 @@ export default async function EventsPage() {
       />
 
       {events.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhum evento cadastrado.
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Nenhum evento cadastrado"
+          description="Adicione o primeiro evento para começar a montar a programação."
+        />
       ) : (
-        <Card>
+        <Card className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>

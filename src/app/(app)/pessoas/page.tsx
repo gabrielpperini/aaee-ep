@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -11,6 +11,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { NewPersonButton } from "./new-person-button";
 import { PersonRowActions } from "./row-actions";
 
@@ -28,19 +29,19 @@ export default async function PeoplePage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Gestão · Cadastros"
         title="Pessoas"
         description="Membros da delegação: atletas, torcida, apoio e diretoria."
         actions={<NewPersonButton modalities={modalities} />}
       />
 
       {people.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhuma pessoa cadastrada.
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Nenhuma pessoa cadastrada"
+          description="Comece adicionando atletas, torcida e equipe de apoio."
+        />
       ) : (
-        <Card>
+        <Card className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>

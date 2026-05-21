@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { MODALITY_CATEGORY_LABELS, PRIORITY_LABELS, priorityVariant } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
+import { EmptyState } from "@/components/app/empty-state";
 import { NewModalityButton } from "./new-modality-button";
 import { ModalityRowActions } from "./row-actions";
 
@@ -26,19 +27,19 @@ export default async function ModalitiesPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Gestão · Disputas"
         title="Modalidades"
         description="Esportes, atividades culturais e da torcida."
         actions={<NewModalityButton />}
       />
 
       {modalities.length === 0 ? (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground">
-            Nenhuma modalidade cadastrada.
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Nenhuma modalidade cadastrada"
+          description="Cadastre as disputas que a delegação vai participar."
+        />
       ) : (
-        <Card>
+        <Card className="overflow-hidden p-0">
           <Table>
             <TableHeader>
               <TableRow>
