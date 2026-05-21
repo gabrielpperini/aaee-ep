@@ -13,6 +13,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
+import { COURSE_LABELS } from "@/lib/format";
 import type { Role } from "@/generated/prisma/client";
 import { UserRowActions } from "./row-actions";
 
@@ -35,7 +36,15 @@ export default async function AdminUsersPage() {
     prisma.user.findMany({
       orderBy: { email: "asc" },
       include: {
-        person: { select: { id: true, name: true, nickname: true } },
+        person: {
+          select: {
+            id: true,
+            name: true,
+            nickname: true,
+            course: true,
+            semester: true,
+          },
+        },
       },
     }),
     prisma.person.findMany({
@@ -67,6 +76,7 @@ export default async function AdminUsersPage() {
                 <TableHead>Telefone</TableHead>
                 <TableHead>Função</TableHead>
                 <TableHead>Pessoa vinculada</TableHead>
+                <TableHead>Curso / Sem.</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -103,6 +113,15 @@ export default async function AdminUsersPage() {
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {u.person?.course ? COURSE_LABELS[u.person.course] : "—"}
+                    {u.person?.semester ? (
+                      <span className="text-muted-foreground/70">
+                        {" "}
+                        · {u.person.semester}º sem
+                      </span>
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     <UserRowActions
