@@ -66,7 +66,26 @@ pnpm prisma generate
 pnpm dev
 ```
 
-Abra http://localhost:3000 — você será redirecionado para `/login`. Use seu email para receber um código de acesso.
+Abra http://localhost:3000 — você será redirecionado para `/login`.
+
+### Métodos de autenticação
+
+- **Email + senha** (padrão): cadastre-se em `/signup`, depois entre em `/login`.
+- **Código no email (OTP)**: clique em "Entrar com código no email" ou "Esqueci a senha" no login. Útil como fallback / reset.
+
+### Configuração obrigatória no Supabase (uma vez)
+
+Antes de testar em produção:
+
+1. **URL Configuration** (`Auth → URL Configuration`):
+   - **Site URL**: `https://aaee-ep.vercel.app` (ou seu domínio)
+   - **Redirect URLs**: adicione `https://aaee-ep.vercel.app/**` e `http://localhost:3000/**`
+2. **Email template do Magic Link** (`Auth → Templates → Magic Link`): inclua `{{ .Token }}` no HTML para que o código de 6 dígitos apareça no email (e não só o link). Exemplo:
+   ```html
+   <p>Seu código: <strong>{{ .Token }}</strong></p>
+   <p>Ou clique: <a href="{{ .ConfirmationURL }}">entrar diretamente</a></p>
+   ```
+3. **Email confirmation** (`Auth → Providers → Email`): se você desabilitar "Confirm email", o signup loga o usuário imediatamente. Se mantiver habilitado, o usuário precisa clicar no link de confirmação antes de logar.
 
 ### 6. Promover-se a admin
 
