@@ -72,6 +72,10 @@ export default async function AgendaPage({
               <ul className="mt-4 space-y-3">
                 {byDay.get(d)!.map((e) => (
                   <li key={e.id}>
+                    <Link
+                      href={`/eventos/${e.id}`}
+                      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+                    >
                     <article className="group grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-stretch overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-foreground/30 hover:shadow-md">
                       <div className="relative flex w-24 flex-col items-center justify-center border-r border-dashed border-border bg-muted/40 px-3 py-3 text-center">
                         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -119,6 +123,7 @@ export default async function AgendaPage({
                         <Badge variant={statusVariant(e.status)}>{STATUS_LABELS[e.status]}</Badge>
                       </div>
                     </article>
+                    </Link>
                   </li>
                 ))}
               </ul>
