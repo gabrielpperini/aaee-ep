@@ -51,61 +51,45 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 **Objetivo:** Habilitar o uso real durante o evento: cada pessoa informa disponibilidade, diretores alocam torcida, check-ins acontecem.
 
-### Entregas
+### Cadastro e onboarding
 
-#### Cadastro e onboarding
+- [x] Auth com **email + senha** (Supabase) como método principal
+- [x] **OTP por email** como alternativa ("Entrar com código no email")
+- [x] Fluxo "Esqueci a senha" via email de redefinição (`/auth/reset`)
+- [x] Tela de **cadastro** (`/signup`) coletando upfront: nome, apelido, telefone (máscara `(51) 99999-9999`), curso, semestre, email + senha
+- [x] Cria `auth.users` no Supabase + `User` + `Person` (com `isSupporter=true`) numa transação, com auto-link por email
+- [x] Validações no cadastro: senha 8+ com letra e número, telefone brasileiro, email único
+- [x] Schema: `Person.course` (enum `Course`) e `Person.semester` (Int?, 1–10) — migration aplicada
+- [x] Tela `/perfil` ganha campos curso/semestre (read+edit)
+- [x] `/admin/usuarios` mostra curso/semestre na listagem
 
-- [ ] Auth com **email + senha** (Supabase) como método principal
-- [ ] Manter **OTP por email** como alternativa ("Entrar com código no email")
-- [ ] Fluxo "Esqueci a senha" via magic link/OTP
-- [ ] Tela de **cadastro** (`/signup`) coletando upfront:
-  - Nome completo
-  - Apelido (como quer ser chamado)
-  - Telefone (WhatsApp)
-  - Curso (Civil, Elétrica, Mecânica, Computação, Controle e Automação, Materiais, Cartográfica, Energia, Metalúrgica, Química, Produção, Ambiental, Física)
-  - Semestre (1–10)
-  - Email + senha
-- [ ] No submit do cadastro: cria `auth.users` no Supabase + `User` + `Person` (com flag `isSupporter=true` por padrão) numa transação. Auto-link como já existe.
-- [ ] Validações:
-  - Senha mínima 8 caracteres, com pelo menos 1 letra + 1 número
-  - Email único (Supabase + nosso User)
-  - Telefone formato brasileiro (máscara `(51) 99999-9999`)
-- [ ] Tela `/perfil` ganha campos curso/semestre (read+edit)
-- [ ] `/admin/usuarios` mostra curso/semestre na listagem
-- [ ] Schema: adicionar `Person.course` (enum) e `Person.semester` (Int?) — migration
+### Operação da torcida (núcleo do MVP 2)
 
-#### Operação da torcida (núcleo do MVP 2)
+- [x] Tela **"Meu horário"** (`/disponibilidade`) read-only com slots de 30min em 3 dias mostrando: competindo / escalado(a) / livre
+- [x] Tela de detalhe do evento (`/eventos/[id]`) acessível pela agenda e por diretores
+- [x] Painel de alocação para diretores no detalhe do evento
+  - Todas as pessoas elegíveis (disponível-por-padrão), com toggle "Só livres" vs. "Todos"
+  - Alerta de conflito: competindo em outro evento que sobrepõe / já alocada em outro evento
+  - Função: torcedor / capitão / responsável material / apoio
+- [x] Marcação de capitão por alocação (`Assignment.isCaptain`)
+- [x] Prioridade por evento (já existia; usada como filtro no dashboard)
+- [x] Avanço/cancelamento de eventos condicionais (botões no detalhe do evento)
+- [x] **Check-in** ("Estou aqui") no detalhe do evento, com histórico
+- [x] **Dashboard da diretoria** (`/dashboard`)
+  - Eventos acontecendo agora
+  - Próximos eventos (janela de 3h)
+  - Pessoas livres × ocupadas agora
+  - Eventos prioritários com torcida abaixo do desejado
 
-- [ ] Tela "Minha disponibilidade" com slots de 30min em 3 dias
-- [ ] Bloqueio automático de slots em que a pessoa compete (cruza `Event.athletes`)
-- [ ] Tela de alocação de torcida para diretores
-  - Filtro de pessoas disponíveis no horário
-  - Alerta de conflito (mesma pessoa em dois eventos)
-  - Definição de função (torcedor, capitão, responsável material, apoio)
-- [ ] Definição de capitães por evento
-- [ ] Prioridade por evento (baixa/normal/alta/crítica)
-- [ ] Avanço/cancelamento de eventos condicionais (semifinais, finais)
-- [ ] Check-in (botão "Estou aqui" no detalhe do evento)
-- [ ] Dashboard da diretoria
-  - Eventos agora / próximos
-  - Pessoas disponíveis / ocupadas
-  - Alocados x desejado por evento
-  - Eventos prioritários com pouca torcida
+### Entidades adicionadas no MVP 2
 
-### Entidades adicionadas
+`Assignment`, `CheckIn` — migradas. `AvailabilitySlot` foi descartado: disponibilidade virou implícita.
 
-`AvailabilitySlot`, `Assignment`, `CheckIn`.
+### Regras-chave do MVP 2
 
-### Mudanças de schema
-
-- `Person.course` (enum `Course` com os cursos da Engenharia UFRGS)
-- `Person.semester` (Int opcional, 1–10)
-
-### Regras-chave a implementar
-
-- Uma pessoa não pode estar alocada em dois eventos no mesmo horário (alerta)
-- Atleta competindo aparece como indisponível para torcida no mesmo slot
-- Disponibilidade pode ser sobrescrita pela própria pessoa
+- **Toda pessoa é disponível por padrão.** Indisponibilidade é implícita: ou está competindo, ou já foi alocada em outro evento que sobrepõe no horário
+- Uma pessoa não pode estar alocada em dois eventos no mesmo horário (alerta no painel de alocação)
+- Atleta competindo aparece como indisponível para torcida no mesmo horário
 - Senha é gerenciada pelo Supabase Auth (nunca chega ao nosso banco)
 
 ---
@@ -161,10 +145,12 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 - [x] Toggle de tema claro/escuro (next-themes)
 - [x] Paleta customizada em `globals.css` com tokens navy/teal/cream
 - [x] Logo da AAEE na sidebar (compacto) e na tela de login (grande)
-- [ ] Adicionar `public/logo.png` (ainda pendente — gabriel)
-- [ ] Favicon usando o brasão (substituir o `favicon.ico` padrão do Next)
-- [ ] Open Graph image para previews em link sharing
-- [ ] Splash screen do PWA (na fase 3) com o logo
+- [x] `public/logo.png` adicionado
+- [x] Favicon usando o brasão (`src/app/icon.png` + `apple-icon.png` via Next file convention)
+- [x] Open Graph + Twitter image dinâmicos (`next/og` em `opengraph-image.tsx`), 1200×630 com brasão, paleta navy/cyan/cream e tipografia da marca
+- [x] `metadataBase` + Open Graph metadata no layout (título, descrição, twitter card, apple-web-app)
+- [x] `themeColor` por scheme (light cream / dark navy) via `viewport`
+- [x] **Web App Manifest** (`src/app/manifest.ts`): nome, cores, ícones, `display: standalone`, `lang: pt-BR`. Splash do Add-to-Home-Screen é gerado pelo sistema a partir disso — sem precisar de service worker, que fica pro MVP 3
 
 ---
 
