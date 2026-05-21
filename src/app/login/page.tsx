@@ -105,7 +105,17 @@ function LoginForm() {
 
         <div className="w-full max-w-md rise-in">
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
-            <BrandMark size={64} priority className="rounded-xl ring-1 ring-border" />
+            <div className="relative">
+              <div
+                aria-hidden
+                className="absolute inset-0 -m-3 rounded-full blur-lg"
+                style={{
+                  background:
+                    "radial-gradient(circle, color-mix(in oklch, var(--cyan) 38%, transparent), transparent 70%)",
+                }}
+              />
+              <BrandMark size={92} priority className="relative drop-shadow-[0_8px_20px_rgba(14,30,46,0.25)]" />
+            </div>
             <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               AAEE · Engenharia UFRGS
             </p>
@@ -263,15 +273,20 @@ function BrandSide() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(800px circle at 0% 0%, color-mix(in oklch, var(--sidebar-primary) 35%, transparent), transparent 55%), radial-gradient(700px circle at 100% 100%, color-mix(in oklch, var(--primary) 50%, transparent), transparent 60%)",
+            "radial-gradient(900px circle at 100% 0%, color-mix(in oklch, var(--cyan) 28%, transparent), transparent 55%), radial-gradient(700px circle at 0% 100%, color-mix(in oklch, var(--primary) 60%, transparent), transparent 60%)",
         }}
       />
-      <div aria-hidden className="field-lines pointer-events-none absolute inset-0 text-sidebar-foreground/40 opacity-[0.14]" />
+      <div aria-hidden className="field-lines pointer-events-none absolute inset-0 text-sidebar-foreground/40 opacity-[0.12]" />
+
+      {/* Brasão gigante como assinatura visual, posicionado em destaque */}
+      <div aria-hidden className="pointer-events-none absolute -top-10 -right-10 opacity-[0.10] select-none">
+        <BrandMark size={420} alt="" />
+      </div>
 
       <div className="relative z-10 flex items-center gap-3">
-        <BrandMark size={48} priority className="rounded-xl ring-1 ring-sidebar-border" />
+        <BrandMark size={52} priority className="drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)]" />
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-primary">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan">
             AAEE · UFRGS
           </p>
           <p className="font-display text-xl font-semibold leading-tight tracking-tight">
@@ -281,14 +296,14 @@ function BrandSide() {
       </div>
 
       <div className="relative z-10 max-w-sm">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-primary">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan">
           Engenharia em campo
         </p>
         <h2 className="mt-3 font-display text-5xl xl:text-6xl font-semibold leading-[0.95] tracking-tight text-balance">
           Três dias.{" "}
           <span className="relative inline-block">
             <span className="relative z-10">Uma delegação.</span>
-            <span aria-hidden className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-gold/70" />
+            <span aria-hidden className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-cyan/70" />
           </span>{" "}
           Todo apoio.
         </h2>
@@ -301,7 +316,7 @@ function BrandSide() {
       <div className="relative z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/55">
         <span>EP · 2026</span>
         <span className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan animate-pulse" />
           ao vivo em breve
         </span>
       </div>

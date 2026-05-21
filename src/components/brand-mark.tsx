@@ -5,18 +5,21 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
- * Brasão AAEE Engenharia UFRGS. Renderiza `/logo.png` (deve estar em /public).
- * Enquanto o arquivo não estiver no projeto, mostra um placeholder com as iniciais
- * para o layout não ficar quebrado.
+ * Brasão AAEE Engenharia UFRGS — renderiza `/logo.png`.
+ * O brasão tem silhueta própria (engrenagem), então o componente NÃO recorta
+ * em quadrado. Para hospedar o brasão sobre fundos claros, use `tone="light"`.
+ * Para superfícies escuras, use `tone="dark"` ou o padrão (transparente).
  */
 export function BrandMark({
-  size = 32,
+  size = 40,
   className,
   priority = false,
+  alt = "AAEE Engenharia UFRGS",
 }: {
   size?: number;
   className?: string;
   priority?: boolean;
+  alt?: string;
 }) {
   const [failed, setFailed] = useState(false);
 
@@ -24,11 +27,11 @@ export function BrandMark({
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-md bg-primary text-primary-foreground font-semibold tracking-tight",
+          "flex items-center justify-center rounded-md bg-primary text-primary-foreground font-display font-semibold tracking-tight",
           className,
         )}
-        style={{ width: size, height: size, fontSize: size * 0.32 }}
-        aria-label="AAEE Engenharia UFRGS"
+        style={{ width: size, height: size, fontSize: size * 0.28 }}
+        aria-label={alt}
       >
         AAEE
       </div>
@@ -38,12 +41,13 @@ export function BrandMark({
   return (
     <Image
       src="/logo.png"
-      alt="AAEE Engenharia UFRGS"
+      alt={alt}
       width={size}
       height={size}
       priority={priority}
-      className={cn("rounded-md object-contain", className)}
+      className={cn("object-contain select-none", className)}
       onError={() => setFailed(true)}
+      draggable={false}
     />
   );
 }

@@ -40,8 +40,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --color-gold: var(--gold);
-  --color-gold-foreground: var(--gold-foreground);
+  --color-cyan: var(--cyan);
+  --color-cyan-foreground: var(--cyan-foreground);
+  --color-silver: var(--silver);
+  --color-silver-foreground: var(--silver-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -51,85 +53,95 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Paleta extraída do brasão AAEE Engenharia UFRGS:
- *   Navy profundo  #0B1424  — base do brasão
- *   Navy médio     #1D2D43  — sombra/cartões dark
- *   Slate azulado  #506C7E  — engrenagem
- *   Creme          #EAE0CC  — texto sobre navy
- *   Ouro vitória   #E0A030  — accent de campeonato
+/* Paleta extraída diretamente do brasão AAEE Engenharia UFRGS:
+ *   Navy profundo   #0E1E2E   — banner e contorno interno
+ *   Navy médio      #1D2D43   — superfícies dark
+ *   Prata engrenagem #C5CFD4  — corpo da engrenagem
+ *   Ciano assinatura #7AB4C4  — contorno externo da engrenagem (a cor que define o brasão)
+ *   Branco           #FFFFFF  — letras
  */
 
 :root {
-  --background: oklch(0.965 0.014 82);
-  --foreground: oklch(0.18 0.06 250);
+  /* Background levemente azulado pra harmonizar com o navy do brasão */
+  --background: oklch(0.975 0.005 225);
+  --foreground: oklch(0.20 0.045 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.06 250);
+  --card-foreground: oklch(0.20 0.045 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.06 250);
-  --primary: oklch(0.32 0.12 248);
-  --primary-foreground: oklch(0.97 0.014 82);
-  --secondary: oklch(0.93 0.018 240);
-  --secondary-foreground: oklch(0.28 0.10 248);
-  --muted: oklch(0.945 0.012 240);
-  --muted-foreground: oklch(0.46 0.04 240);
-  --accent: oklch(0.50 0.14 240);
-  --accent-foreground: oklch(0.97 0.014 82);
+  --popover-foreground: oklch(0.20 0.045 250);
+  /* Primary = navy do banner do brasão */
+  --primary: oklch(0.22 0.045 248);
+  --primary-foreground: oklch(0.98 0.005 220);
+  --secondary: oklch(0.93 0.012 225);
+  --secondary-foreground: oklch(0.24 0.05 248);
+  --muted: oklch(0.945 0.010 225);
+  --muted-foreground: oklch(0.46 0.025 235);
+  /* Accent = ciano do contorno da engrenagem — a cor-assinatura do brasão */
+  --accent: oklch(0.72 0.065 215);
+  --accent-foreground: oklch(0.18 0.045 250);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.88 0.020 240);
-  --input: oklch(0.88 0.020 240);
-  --ring: oklch(0.32 0.12 248);
-  --gold: oklch(0.78 0.14 78);
-  --gold-foreground: oklch(0.22 0.07 80);
-  --chart-1: oklch(0.32 0.12 248);
-  --chart-2: oklch(0.62 0.14 230);
-  --chart-3: oklch(0.78 0.14 78);
-  --chart-4: oklch(0.74 0.10 220);
-  --chart-5: oklch(0.46 0.10 245);
+  --border: oklch(0.87 0.013 225);
+  --input: oklch(0.87 0.013 225);
+  --ring: oklch(0.72 0.065 215);
+  /* Cores assinatura do brasão */
+  --cyan: oklch(0.74 0.07 215);
+  --cyan-foreground: oklch(0.18 0.045 250);
+  --silver: oklch(0.82 0.013 230);
+  --silver-foreground: oklch(0.20 0.045 250);
+  --chart-1: oklch(0.22 0.045 248);
+  --chart-2: oklch(0.74 0.07 215);
+  --chart-3: oklch(0.82 0.013 230);
+  --chart-4: oklch(0.55 0.07 220);
+  --chart-5: oklch(0.42 0.05 235);
   --radius: 0.625rem;
-  --sidebar: oklch(0.16 0.05 250);
-  --sidebar-foreground: oklch(0.93 0.018 82);
-  --sidebar-primary: oklch(0.78 0.14 78);
-  --sidebar-primary-foreground: oklch(0.18 0.06 250);
-  --sidebar-accent: oklch(0.24 0.06 248);
-  --sidebar-accent-foreground: oklch(0.97 0.014 82);
+  /* Sidebar navy escuro fiel ao banner do brasão */
+  --sidebar: oklch(0.18 0.045 250);
+  --sidebar-foreground: oklch(0.95 0.008 220);
+  --sidebar-primary: oklch(0.74 0.07 215);
+  --sidebar-primary-foreground: oklch(0.16 0.04 250);
+  --sidebar-accent: oklch(0.24 0.05 250);
+  --sidebar-accent-foreground: oklch(0.96 0.008 220);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.78 0.14 78);
+  --sidebar-ring: oklch(0.74 0.07 215);
 }
 
 .dark {
-  --background: oklch(0.14 0.045 252);
-  --foreground: oklch(0.93 0.018 82);
-  --card: oklch(0.20 0.055 250);
-  --card-foreground: oklch(0.93 0.018 82);
-  --popover: oklch(0.22 0.055 250);
-  --popover-foreground: oklch(0.93 0.018 82);
-  --primary: oklch(0.78 0.14 78);
-  --primary-foreground: oklch(0.16 0.05 250);
-  --secondary: oklch(0.26 0.05 248);
-  --secondary-foreground: oklch(0.93 0.018 82);
-  --muted: oklch(0.24 0.05 250);
-  --muted-foreground: oklch(0.72 0.04 220);
-  --accent: oklch(0.34 0.09 240);
-  --accent-foreground: oklch(0.93 0.018 82);
+  --background: oklch(0.14 0.04 252);
+  --foreground: oklch(0.95 0.008 220);
+  --card: oklch(0.20 0.05 250);
+  --card-foreground: oklch(0.95 0.008 220);
+  --popover: oklch(0.22 0.05 250);
+  --popover-foreground: oklch(0.95 0.008 220);
+  /* No dark, ciano vira primary pra brilhar */
+  --primary: oklch(0.78 0.075 215);
+  --primary-foreground: oklch(0.14 0.04 252);
+  --secondary: oklch(0.26 0.05 250);
+  --secondary-foreground: oklch(0.95 0.008 220);
+  --muted: oklch(0.24 0.045 250);
+  --muted-foreground: oklch(0.74 0.025 220);
+  --accent: oklch(0.32 0.06 235);
+  --accent-foreground: oklch(0.95 0.008 220);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.78 0.14 78);
-  --gold: oklch(0.82 0.15 80);
-  --gold-foreground: oklch(0.16 0.05 250);
-  --chart-1: oklch(0.78 0.14 78);
-  --chart-2: oklch(0.62 0.14 235);
-  --chart-3: oklch(0.86 0.04 80);
-  --chart-4: oklch(0.55 0.13 240);
-  --chart-5: oklch(0.42 0.10 248);
-  --sidebar: oklch(0.11 0.05 252);
-  --sidebar-foreground: oklch(0.93 0.018 82);
-  --sidebar-primary: oklch(0.82 0.15 80);
-  --sidebar-primary-foreground: oklch(0.14 0.05 252);
-  --sidebar-accent: oklch(0.22 0.055 250);
-  --sidebar-accent-foreground: oklch(0.93 0.018 82);
+  --ring: oklch(0.78 0.075 215);
+  --cyan: oklch(0.80 0.075 215);
+  --cyan-foreground: oklch(0.14 0.04 252);
+  --silver: oklch(0.84 0.013 230);
+  --silver-foreground: oklch(0.14 0.04 252);
+  --chart-1: oklch(0.78 0.075 215);
+  --chart-2: oklch(0.62 0.06 220);
+  --chart-3: oklch(0.84 0.013 230);
+  --chart-4: oklch(0.55 0.07 230);
+  --chart-5: oklch(0.42 0.06 245);
+  --sidebar: oklch(0.11 0.04 252);
+  --sidebar-foreground: oklch(0.95 0.008 220);
+  --sidebar-primary: oklch(0.80 0.075 215);
+  --sidebar-primary-foreground: oklch(0.11 0.04 252);
+  --sidebar-accent: oklch(0.22 0.05 250);
+  --sidebar-accent-foreground: oklch(0.95 0.008 220);
   --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.82 0.15 80);
+  --sidebar-ring: oklch(0.80 0.075 215);
 }
 
 @layer base {
@@ -147,12 +159,12 @@
     background-image:
       radial-gradient(
         1100px circle at 12% -10%,
-        color-mix(in oklch, var(--primary) 18%, transparent) 0%,
+        color-mix(in oklch, var(--primary) 14%, transparent) 0%,
         transparent 55%
       ),
       radial-gradient(
         900px circle at 110% 0%,
-        color-mix(in oklch, var(--gold) 14%, transparent) 0%,
+        color-mix(in oklch, var(--cyan) 22%, transparent) 0%,
         transparent 55%
       );
     background-attachment: fixed;
@@ -161,12 +173,12 @@
     background-image:
       radial-gradient(
         1100px circle at 8% -10%,
-        color-mix(in oklch, var(--primary) 30%, transparent) 0%,
+        color-mix(in oklch, var(--primary) 28%, transparent) 0%,
         transparent 55%
       ),
       radial-gradient(
         900px circle at 110% 4%,
-        color-mix(in oklch, var(--gold) 18%, transparent) 0%,
+        color-mix(in oklch, var(--cyan) 20%, transparent) 0%,
         transparent 55%
       );
   }
@@ -231,10 +243,10 @@
   }
 
   /* Diagonal stripe ribbon (used as decorative element) */
-  .stripes-gold {
+  .stripes-cyan {
     background-image: repeating-linear-gradient(
       45deg,
-      var(--gold) 0 6px,
+      var(--cyan) 0 6px,
       transparent 6px 14px
     );
   }

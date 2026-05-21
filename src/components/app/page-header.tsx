@@ -38,7 +38,7 @@ export function PageHeader({
       </div>
       <div className="mt-6 flex items-center gap-3" aria-hidden>
         <span className="h-px flex-1 bg-gradient-to-r from-border via-border/60 to-transparent" />
-        <span className="h-1.5 w-1.5 rounded-full bg-gold" />
+        <span className="h-1.5 w-1.5 rounded-full bg-cyan" />
         <span className="h-px w-12 bg-border" />
       </div>
     </div>

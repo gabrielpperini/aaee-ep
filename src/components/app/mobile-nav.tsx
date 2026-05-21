@@ -38,13 +38,13 @@ export function MobileNav({ role, name }: { role: Role; name: string }) {
     <header className="lg:hidden sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/65">
       <div className="flex items-center justify-between px-4 py-3">
         <Link href="/" onClick={closeOnNav} className="flex items-center gap-2.5 min-w-0">
-          <BrandMark size={34} priority className="rounded-lg" />
+          <BrandMark size={40} priority className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.15)]" />
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted-foreground leading-none">
-              AAEE · UFRGS
-            </p>
-            <p className="font-display text-sm font-semibold leading-tight tracking-tight truncate">
+            <p className="font-display text-base font-semibold leading-[1.05] tracking-tight truncate">
               Delegação EP
+            </p>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-accent leading-none">
+              AAEE · UFRGS
             </p>
           </div>
         </Link>
@@ -69,14 +69,24 @@ export function MobileNav({ role, name }: { role: Role; name: string }) {
               </SheetDescription>
 
               <div className="flex h-full flex-col">
-                <div className="flex items-center gap-3 px-5 pt-6 pb-5 border-b border-sidebar-border">
-                  <BrandMark size={40} priority className="rounded-xl ring-1 ring-sidebar-border" />
+                <div className="relative flex items-center gap-3 px-5 pt-7 pb-6 border-b border-sidebar-border">
+                  <div className="relative shrink-0">
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 -m-2 rounded-full blur-md"
+                      style={{
+                        background:
+                          "radial-gradient(circle, color-mix(in oklch, var(--cyan) 55%, transparent), transparent 70%)",
+                      }}
+                    />
+                    <BrandMark size={48} priority className="relative drop-shadow-[0_4px_14px_rgba(0,0,0,0.35)]" />
+                  </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-primary/90">
-                      AAEE · UFRGS
-                    </p>
-                    <p className="font-display text-lg font-semibold leading-tight tracking-tight">
+                    <p className="font-display text-lg font-semibold leading-[1.05] tracking-tight">
                       Delegação EP
+                    </p>
+                    <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan">
+                      AAEE · Engenharia UFRGS
                     </p>
                   </div>
                 </div>

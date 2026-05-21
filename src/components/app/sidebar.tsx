@@ -49,21 +49,28 @@ export function Sidebar({ role, name }: { role: Role; name: string }) {
 
 function BrandBlock() {
   return (
-    <div className="relative z-10 flex items-center gap-3 px-5 pt-6 pb-5">
-      <div className="relative">
-        <div
-          aria-hidden
-          className="absolute inset-0 -m-1 rounded-xl bg-sidebar-primary/15 blur-md"
-        />
-        <BrandMark size={44} priority className="relative rounded-xl ring-1 ring-sidebar-border" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-primary/90">
-          AAEE · UFRGS
-        </p>
-        <p className="font-display text-lg font-semibold leading-tight tracking-tight">
-          Delegação EP
-        </p>
+    <div className="relative z-10 px-5 pt-7 pb-6">
+      <div className="flex items-center gap-3">
+        <div className="relative shrink-0">
+          {/* Halo ciano por trás do brasão, da própria cor do contorno do logo */}
+          <div
+            aria-hidden
+            className="absolute inset-0 -m-2 rounded-full blur-md"
+            style={{
+              background:
+                "radial-gradient(circle, color-mix(in oklch, var(--cyan) 55%, transparent), transparent 70%)",
+            }}
+          />
+          <BrandMark size={56} priority className="relative drop-shadow-[0_4px_14px_rgba(0,0,0,0.35)]" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-display text-xl font-semibold leading-[1.05] tracking-tight">
+            Delegação EP
+          </p>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan">
+            AAEE · Engenharia UFRGS
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -127,7 +134,7 @@ function SidebarFooter({ name, role }: { name: string; role: Role }) {
     <div className="relative z-10 border-t border-sidebar-border px-3 py-3 space-y-1">
       <div className="flex items-center gap-3 px-2 py-2">
         <div className="relative h-9 w-9 shrink-0">
-          <div className="absolute inset-0 rounded-full stripes-gold opacity-60" aria-hidden />
+          <div className="absolute inset-0 rounded-full stripes-cyan opacity-60" aria-hidden />
           <div className="absolute inset-[2px] rounded-full bg-sidebar grid place-items-center font-display text-sm font-bold">
             {initials(name)}
           </div>

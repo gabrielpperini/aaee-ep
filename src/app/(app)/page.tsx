@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Calendar, MapPin, Trophy, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { BrandMark } from "@/components/brand-mark";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { formatEventTime } from "@/lib/format";
@@ -88,24 +89,35 @@ function Hero({ name, eventCount }: { name: string; eventCount: number }) {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(900px circle at 110% 0%, color-mix(in oklch, var(--gold) 28%, transparent), transparent 60%), radial-gradient(700px circle at -10% 110%, color-mix(in oklch, var(--primary) 38%, transparent), transparent 60%)",
+            "radial-gradient(900px circle at 110% 0%, color-mix(in oklch, var(--cyan) 22%, transparent), transparent 60%), radial-gradient(700px circle at -10% 110%, color-mix(in oklch, var(--primary) 24%, transparent), transparent 60%)",
         }}
       />
-      <div aria-hidden className="field-lines pointer-events-none absolute inset-0 text-foreground/40 opacity-[0.12]" />
+      <div aria-hidden className="field-lines pointer-events-none absolute inset-0 text-foreground/40 opacity-[0.10]" />
+
+      {/* Brasão watermark — assinatura visual gigante, posicionado para sangrar pra fora */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-16 -top-16 opacity-[0.08] hidden sm:block select-none"
+      >
+        <BrandMark size={360} alt="" />
+      </div>
 
       <div className="relative grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.5fr_1fr] lg:gap-10 lg:p-10">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground backdrop-blur-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
-            EP · Engenharia UFRGS
-          </p>
+          <div className="inline-flex items-center gap-3 rounded-full border border-border/70 bg-background/60 py-1.5 pl-1.5 pr-3.5 backdrop-blur-sm">
+            <BrandMark size={28} priority />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              EP · Engenharia UFRGS
+            </span>
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan animate-pulse" />
+          </div>
           <h1 className="mt-4 font-display text-4xl sm:text-5xl lg:text-6xl font-semibold leading-[0.95] tracking-tight text-balance">
             Olá,{" "}
             <span className="relative inline-block">
               <span className="relative z-10">{name}</span>
               <span
                 aria-hidden
-                className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-gold/55"
+                className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-cyan/55"
               />
             </span>
             .
@@ -133,7 +145,7 @@ function Hero({ name, eventCount }: { name: string; eventCount: number }) {
 
         <div className="relative grid grid-cols-2 gap-3 self-stretch sm:gap-4 lg:grid-cols-1 lg:grid-rows-2">
           <HeroPanel label="Dias do EP" value="3" suffix="dias" tone="navy" />
-          <HeroPanel label="Eventos previstos" value={String(eventCount).padStart(2, "0")} suffix={eventCount === 1 ? "evento" : "eventos"} tone="gold" />
+          <HeroPanel label="Eventos previstos" value={String(eventCount).padStart(2, "0")} suffix={eventCount === 1 ? "evento" : "eventos"} tone="cyan" />
         </div>
       </div>
     </section>
@@ -149,14 +161,14 @@ function HeroPanel({
   label: string;
   value: string;
   suffix: string;
-  tone: "navy" | "gold";
+  tone: "navy" | "cyan";
 }) {
   return (
     <div
       className={cn(
         "relative overflow-hidden rounded-xl border p-4 sm:p-5",
-        tone === "gold"
-          ? "border-gold/40 bg-gold/15 text-foreground"
+        tone === "cyan"
+          ? "border-cyan/40 bg-cyan/15 text-foreground"
           : "border-border bg-background/60 text-foreground",
       )}
     >
@@ -169,8 +181,8 @@ function HeroPanel({
           {suffix}
         </span>
       </div>
-      {tone === "gold" && (
-        <div aria-hidden className="absolute -bottom-3 -right-3 h-16 w-16 stripes-gold opacity-40 rotate-12" />
+      {tone === "cyan" && (
+        <div aria-hidden className="absolute -bottom-3 -right-3 h-16 w-16 stripes-cyan opacity-40 rotate-12" />
       )}
     </div>
   );
