@@ -39,7 +39,7 @@ export function UserRowActions({ user, unlinkedPersons }: Props) {
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>
             Editar
           </DropdownMenuItem>
         </DropdownMenuContent>

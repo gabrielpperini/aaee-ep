@@ -1,36 +1,41 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
+import type { Course } from "@/generated/prisma/client";
+import {
+  fieldErrorsFromZod,
+  fieldFailure,
+  success,
+  type FormState,
+} from "@/lib/validations/_action-result";
+import {
+  profileSchema,
+  type ProfileFormValues,
+} from "@/lib/validations/profile";
+import { phoneDigits } from "@/lib/validations/_primitives";
 
-const ProfileSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório").max(120),
-  nickname: z.string().max(60).optional().or(z.literal("")),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  phone: z.string().max(40).optional().or(z.literal("")),
-  modalityIds: z.array(z.string()).default([]),
-});
-
-export type ProfileFormValues = z.infer<typeof ProfileSchema>;
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
-export async function saveOwnProfile(input: ProfileFormValues): Promise<ActionResult> {
+export async function saveOwnProfile(
+  _prev: FormState,
+  input: ProfileFormValues,
+): Promise<FormState> {
   const user = await requireUser();
 
-  const parsed = ProfileSchema.safeParse(input);
+  const parsed = profileSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+    return fieldFailure(fieldErrorsFromZod(parsed.error));
   }
 
-  const { name, nickname, email, phone, modalityIds } = parsed.data;
+  const { name, nickname, email, phone, course, semester, modalityIds } = parsed.data;
 
   const data = {
     name: name.trim(),
     nickname: nickname?.trim() || null,
     email: email?.trim().toLowerCase() || null,
-    phone: phone?.trim() || null,
+    phone: phone ? phoneDigits(phone) || null : null,
+    course: (course || null) as Course | null,
+    semester: typeof semester === "number" ? semester : null,
   };
 
   if (user.person) {
@@ -59,5 +64,5 @@ export async function saveOwnProfile(input: ProfileFormValues): Promise<ActionRe
   }
 
   revalidatePath("/perfil");
-  return { ok: true };
+  return success();
 }

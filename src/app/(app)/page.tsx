@@ -16,7 +16,7 @@ export default async function HomePage() {
     prisma.location.count(),
     prisma.event.count(),
     prisma.event.findMany({
-      where: { status: { in: ["CONFIRMED", "POSSIBLE", "IN_PROGRESS"] } },
+      where: { status: "CONFIRMED" },
       orderBy: [{ day: "asc" }, { startTime: "asc" }],
       take: 5,
       include: { modality: true, location: true },

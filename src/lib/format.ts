@@ -1,6 +1,13 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { EventPhase, EventPriority, EventStatus, ModalityCategory } from "@/generated/prisma/client";
+import type {
+  AssignmentRole,
+  Course,
+  EventPhase,
+  EventPriority,
+  EventStatus,
+  ModalityCategory,
+} from "@/generated/prisma/client";
 
 export function formatEventTime(start: Date, end: Date): string {
   return `${format(start, "HH:mm")} – ${format(end, "HH:mm")}`;
@@ -29,12 +36,44 @@ export const PRIORITY_LABELS: Record<EventPriority, string> = {
 
 export const STATUS_LABELS: Record<EventStatus, string> = {
   CONFIRMED: "Confirmado",
+  CANCELLED: "Cancelado",
+  POSTPONED: "Adiado",
+};
+
+/** Status derivado pra exibição na UI, computado de status + tempos + isConditional. */
+export type DerivedEventStatus =
+  | "CONFIRMED"
+  | "POSSIBLE"
+  | "IN_PROGRESS"
+  | "FINISHED"
+  | "CANCELLED"
+  | "POSTPONED";
+
+export const DERIVED_STATUS_LABELS: Record<DerivedEventStatus, string> = {
+  CONFIRMED: "Confirmado",
   POSSIBLE: "Possível",
   IN_PROGRESS: "Em andamento",
   FINISHED: "Finalizado",
   CANCELLED: "Cancelado",
   POSTPONED: "Adiado",
 };
+
+export function deriveEventStatus(event: {
+  status: EventStatus;
+  startTime: Date;
+  endTime: Date;
+  isConditional: boolean;
+}, now: Date = new Date()): DerivedEventStatus {
+  if (event.status === "CANCELLED" || event.status === "POSTPONED") {
+    return event.status;
+  }
+  if (event.endTime.getTime() < now.getTime()) return "FINISHED";
+  if (event.startTime.getTime() <= now.getTime() && now.getTime() <= event.endTime.getTime()) {
+    return "IN_PROGRESS";
+  }
+  if (event.isConditional) return "POSSIBLE";
+  return "CONFIRMED";
+}
 
 export const PHASE_LABELS: Record<EventPhase, string> = {
   GROUP: "Fase de grupos",
@@ -73,12 +112,36 @@ export function statusVariant(status: EventStatus): "default" | "secondary" | "d
   switch (status) {
     case "CANCELLED":
       return "destructive";
-    case "POSSIBLE":
     case "POSTPONED":
       return "outline";
-    case "FINISHED":
-      return "secondary";
     default:
       return "default";
   }
 }
+
+export const COURSE_LABELS: Record<Course, string> = {
+  CIVIL: "Civil",
+  ELETRICA: "Elétrica",
+  MECANICA: "Mecânica",
+  COMPUTACAO: "Computação",
+  CONTROLE_AUTOMACAO: "Controle e Automação",
+  MATERIAIS: "Materiais",
+  CARTOGRAFICA: "Cartográfica",
+  ENERGIA: "Energia",
+  METALURGICA: "Metalúrgica",
+  QUIMICA: "Química",
+  PRODUCAO: "Produção",
+  AMBIENTAL: "Ambiental",
+  FISICA: "Física",
+};
+
+export const COURSE_OPTIONS: { value: Course; label: string }[] = (
+  Object.entries(COURSE_LABELS) as [Course, string][]
+).map(([value, label]) => ({ value, label }));
+
+export const ASSIGNMENT_ROLE_LABELS: Record<AssignmentRole, string> = {
+  SUPPORTER: "Torcedor(a)",
+  CAPTAIN: "Capitão/Capitã",
+  MATERIAL_LEAD: "Responsável material",
+  SUPPORT: "Apoio",
+};

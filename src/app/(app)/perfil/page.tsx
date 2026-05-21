@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { ProfileForm } from "./profile-form";
+import type { ProfileFormValues } from "@/lib/validations/profile";
 
 const ROLE_LABEL: Record<string, string> = {
   USER: "Usuário",
@@ -34,11 +35,13 @@ export default async function ProfilePage() {
       ).map((ma) => ma.modalityId)
     : [];
 
-  const initial = {
+  const initial: ProfileFormValues = {
     name: user.person?.name ?? "",
     nickname: user.person?.nickname ?? "",
     email: user.person?.email ?? user.email ?? "",
     phone: user.person?.phone ?? user.phone ?? "",
+    course: user.person?.course ?? "",
+    semester: user.person?.semester ?? "",
     modalityIds: selectedModalityIds,
   };
 

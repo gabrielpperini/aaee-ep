@@ -1,27 +1,29 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
+import {
+  fieldErrorsFromZod,
+  failure,
+  fieldFailure,
+  success,
+  type FormState,
+} from "@/lib/validations/_action-result";
+import {
+  modalitySchema,
+  type ModalityFormValues,
+} from "@/lib/validations/modality";
 
-const ModalitySchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, "Nome é obrigatório").max(120),
-  category: z.enum(["SPORT", "CULTURAL", "CHEERING", "LOGISTICS", "GENERAL"]),
-  priority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]),
-  notes: z.string().max(500).optional().or(z.literal("")),
-});
-
-export type ModalityFormValues = z.infer<typeof ModalitySchema>;
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
-export async function saveModality(input: ModalityFormValues): Promise<ActionResult> {
+export async function saveModality(
+  _prev: FormState,
+  input: ModalityFormValues,
+): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
 
-  const parsed = ModalitySchema.safeParse(input);
+  const parsed = modalitySchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+    return fieldFailure(fieldErrorsFromZod(parsed.error));
   }
 
   const { id, name, category, priority, notes } = parsed.data;
@@ -34,20 +36,20 @@ export async function saveModality(input: ModalityFormValues): Promise<ActionRes
       await prisma.modality.create({ data });
     }
   } catch {
-    return { ok: false, error: "Já existe uma modalidade com esse nome." };
+    return failure("Já existe uma modalidade com esse nome.");
   }
 
   revalidatePath("/modalidades");
-  return { ok: true };
+  return success();
 }
 
-export async function deleteModality(id: string): Promise<ActionResult> {
+export async function deleteModality(id: string): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
   try {
     await prisma.modality.delete({ where: { id } });
   } catch {
-    return { ok: false, error: "Não foi possível excluir (existem eventos vinculados)." };
+    return failure("Não foi possível excluir (existem eventos vinculados).");
   }
   revalidatePath("/modalidades");
-  return { ok: true };
+  return success();
 }

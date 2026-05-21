@@ -1,86 +1,55 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser, requireRole } from "@/lib/auth";
 import type { Role } from "@/generated/prisma/client";
+import {
+  failure,
+  fieldErrorsFromZod,
+  fieldFailure,
+  success,
+  type FormState,
+} from "@/lib/validations/_action-result";
+import { userEditSchema, type UserEditFormValues } from "@/lib/validations/user";
 
-export type ActionResult = { ok: true } | { ok: false; error: string };
 
-const RoleSchema = z.enum(["USER", "DIRECTOR", "ADMIN"]);
-const CuidSchema = z.string().min(1, "ID inválido");
-
-export async function updateUserRole(
+async function applyRoleChange(
   userId: string,
   role: Role,
-): Promise<ActionResult> {
-  await requireRole(["ADMIN"]);
-
-  const parsedId = CuidSchema.safeParse(userId);
-  if (!parsedId.success) {
-    return { ok: false, error: "ID de usuário inválido" };
-  }
-  const parsedRole = RoleSchema.safeParse(role);
-  if (!parsedRole.success) {
-    return { ok: false, error: "Função inválida" };
-  }
-
+): Promise<FormState> {
   const current = await getCurrentUser();
-  if (current && current.id === parsedId.data && parsedRole.data !== "ADMIN") {
-    return {
-      ok: false,
-      error: "Você não pode rebaixar a si mesmo. Peça a outro admin.",
-    };
+  if (current && current.id === userId && role !== "ADMIN") {
+    return failure("Você não pode rebaixar a si mesmo. Peça a outro admin.");
   }
 
   const target = await prisma.user.findUnique({
-    where: { id: parsedId.data },
+    where: { id: userId },
     select: { id: true },
   });
   if (!target) {
-    return { ok: false, error: "Usuário não encontrado" };
+    return failure("Usuário não encontrado");
   }
 
   await prisma.user.update({
-    where: { id: parsedId.data },
-    data: { role: parsedRole.data },
+    where: { id: userId },
+    data: { role },
   });
-
-  revalidatePath("/admin/usuarios");
-  return { ok: true };
+  return success();
 }
 
-export async function linkUserToPerson(
+async function applyPersonLink(
   userId: string,
   personId: string | null,
-): Promise<ActionResult> {
-  await requireRole(["ADMIN"]);
-
-  const parsedUserId = CuidSchema.safeParse(userId);
-  if (!parsedUserId.success) {
-    return { ok: false, error: "ID de usuário inválido" };
-  }
-  if (personId !== null) {
-    const parsedPersonId = CuidSchema.safeParse(personId);
-    if (!parsedPersonId.success) {
-      return { ok: false, error: "ID de pessoa inválido" };
-    }
-  }
-
+): Promise<FormState> {
   const user = await prisma.user.findUnique({
-    where: { id: parsedUserId.data },
+    where: { id: userId },
     include: { person: { select: { id: true } } },
   });
-  if (!user) {
-    return { ok: false, error: "Usuário não encontrado" };
-  }
+  if (!user) return failure("Usuário não encontrado");
 
   const currentPersonId = user.person?.id ?? null;
-
-  if (currentPersonId === personId) {
-    return { ok: true };
-  }
+  if (currentPersonId === personId) return success();
 
   if (personId === null) {
     if (currentPersonId) {
@@ -89,22 +58,16 @@ export async function linkUserToPerson(
         data: { userId: null },
       });
     }
-    revalidatePath("/admin/usuarios");
-    return { ok: true };
+    return success();
   }
 
   const target = await prisma.person.findUnique({
     where: { id: personId },
     select: { id: true, userId: true },
   });
-  if (!target) {
-    return { ok: false, error: "Pessoa não encontrada" };
-  }
-  if (target.userId && target.userId !== parsedUserId.data) {
-    return {
-      ok: false,
-      error: "Essa pessoa já está vinculada a outro usuário.",
-    };
+  if (!target) return failure("Pessoa não encontrada");
+  if (target.userId && target.userId !== userId) {
+    return failure("Essa pessoa já está vinculada a outro usuário.");
   }
 
   await prisma.$transaction(async (tx) => {
@@ -116,10 +79,32 @@ export async function linkUserToPerson(
     }
     await tx.person.update({
       where: { id: personId },
-      data: { userId: parsedUserId.data },
+      data: { userId: userId },
     });
   });
+  return success();
+}
+
+export async function saveUserEdit(
+  _prev: FormState,
+  input: UserEditFormValues,
+): Promise<FormState> {
+  await requireRole(["ADMIN"]);
+
+  const parsed = userEditSchema.safeParse(input);
+  if (!parsed.success) {
+    return fieldFailure(fieldErrorsFromZod(parsed.error));
+  }
+
+  const { userId, role, personId } = parsed.data;
+
+  const roleResult = await applyRoleChange(userId, role);
+  if (roleResult.status === "error") return roleResult;
+
+  const linkResult = await applyPersonLink(userId, personId);
+  if (linkResult.status === "error") return linkResult;
 
   revalidatePath("/admin/usuarios");
-  return { ok: true };
+  return success();
 }
+

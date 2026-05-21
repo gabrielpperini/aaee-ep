@@ -1,27 +1,29 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
+import {
+  fieldErrorsFromZod,
+  failure,
+  fieldFailure,
+  success,
+  type FormState,
+} from "@/lib/validations/_action-result";
+import {
+  locationSchema,
+  type LocationFormValues,
+} from "@/lib/validations/location";
 
-const LocationSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, "Nome é obrigatório").max(120),
-  address: z.string().max(240).optional().or(z.literal("")),
-  description: z.string().max(500).optional().or(z.literal("")),
-  notes: z.string().max(500).optional().or(z.literal("")),
-});
-
-export type LocationFormValues = z.infer<typeof LocationSchema>;
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
-export async function saveLocation(input: LocationFormValues): Promise<ActionResult> {
+export async function saveLocation(
+  _prev: FormState,
+  input: LocationFormValues,
+): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
 
-  const parsed = LocationSchema.safeParse(input);
+  const parsed = locationSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+    return fieldFailure(fieldErrorsFromZod(parsed.error));
   }
 
   const { id, name, address, description, notes } = parsed.data;
@@ -39,16 +41,16 @@ export async function saveLocation(input: LocationFormValues): Promise<ActionRes
   }
 
   revalidatePath("/locais");
-  return { ok: true };
+  return success();
 }
 
-export async function deleteLocation(id: string): Promise<ActionResult> {
+export async function deleteLocation(id: string): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
   try {
     await prisma.location.delete({ where: { id } });
   } catch {
-    return { ok: false, error: "Não foi possível excluir (talvez existam eventos vinculados)." };
+    return failure("Não foi possível excluir (talvez existam eventos vinculados).");
   }
   revalidatePath("/locais");
-  return { ok: true };
+  return success();
 }

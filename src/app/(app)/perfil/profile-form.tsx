@@ -1,12 +1,35 @@
 "use client";
 
-import { useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { saveOwnProfile, type ProfileFormValues } from "./actions";
+import { MultiSelect } from "@/components/ui/multi-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PhoneInput } from "@/components/phone-input";
+import { COURSE_OPTIONS } from "@/lib/format";
+import {
+  profileSchema,
+  type ProfileFormValues,
+} from "@/lib/validations/profile";
+import { useFormAction } from "@/lib/validations/use-form-action";
+import { saveOwnProfile } from "./actions";
 
 type ModalityOption = { id: string; name: string };
 
@@ -16,103 +39,170 @@ type Props = {
   initial: ProfileFormValues;
 };
 
-export function ProfileForm({ personId, modalities, initial }: Props) {
-  const [pending, startTransition] = useTransition();
+const SEMESTERS = Array.from({ length: 10 }, (_, i) => i + 1);
+const SEMESTER_LABELS: Record<string, string> = Object.fromEntries(
+  SEMESTERS.map((s) => [String(s), `${s}º`]),
+);
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ProfileFormValues>({
+export function ProfileForm({ personId, modalities, initial }: Props) {
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
     defaultValues: initial,
   });
 
-  function onSubmit(values: ProfileFormValues) {
-    startTransition(async () => {
-      const result = await saveOwnProfile(values);
-      if (!result.ok) {
-        toast.error(result.error);
-        return;
-      }
-      toast.success(personId ? "Perfil atualizado" : "Perfil criado");
-      reset(values);
-    });
-  }
+  const { onSubmit, pending } = useFormAction(saveOwnProfile, form, {
+    successMessage: personId ? "Perfil atualizado" : "Perfil criado",
+    onSuccess: () => form.reset(form.getValues()),
+  });
+
+  const modalityOptions = modalities.map((m) => ({
+    value: m.id,
+    label: m.name,
+  }));
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome completo *</Label>
-        <Input id="name" {...register("name", { required: true })} />
-        {errors.name && <p className="text-xs text-destructive">Obrigatório</p>}
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label htmlFor="nickname">Apelido</Label>
-          <Input id="nickname" {...register("nickname")} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefone</Label>
-          <Input id="phone" {...register("phone")} />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" {...register("email")} />
-        {errors.email && (
-          <p className="text-xs text-destructive">{errors.email.message}</p>
-        )}
-      </div>
-
-      {modalities.length > 0 && (
-        <Controller
-          control={control}
-          name="modalityIds"
-          render={({ field }) => {
-            const value = (field.value ?? []) as string[];
-            return (
-              <div className="space-y-2">
-                <Label>Modalidades em que compete</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded-md p-3 max-h-60 overflow-y-auto">
-                  {modalities.map((m) => {
-                    const checked = value.includes(m.id);
-                    return (
-                      <label
-                        key={m.id}
-                        className="flex items-center gap-2 text-sm cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-input"
-                          checked={checked}
-                          onChange={(e) => {
-                            field.onChange(
-                              e.target.checked
-                                ? [...value, m.id]
-                                : value.filter((id) => id !== m.id),
-                            );
-                          }}
-                        />
-                        {m.name}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          }}
+    <Form {...form}>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nome completo *</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      )}
 
-      <div className="flex justify-end pt-2">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Salvando…" : "Salvar alterações"}
-        </Button>
-      </div>
-    </form>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField
+            control={form.control}
+            name="nickname"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Apelido</FormLabel>
+                <FormControl>
+                  <Input {...field} value={field.value ?? ""} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefone</FormLabel>
+                <FormControl>
+                  <PhoneInput
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input type="email" {...field} value={field.value ?? ""} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px] gap-3">
+          <FormField
+            control={form.control}
+            name="course"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Curso</FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={COURSE_OPTIONS.map((c) => ({
+                      value: c.value,
+                      label: c.label,
+                    }))}
+                    value={(field.value as string) ?? ""}
+                    onChange={field.onChange}
+                    placeholder="— sem curso —"
+                    clearable
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="semester"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Semestre</FormLabel>
+                <Select
+                  items={SEMESTER_LABELS}
+                  value={field.value === "" ? undefined : String(field.value)}
+                  onValueChange={(v) => field.onChange(v ? Number(v) : "")}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="—" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {SEMESTERS.map((s) => (
+                      <SelectItem key={s} value={String(s)}>
+                        {s}º
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {modalities.length > 0 && (
+          <FormField
+            control={form.control}
+            name="modalityIds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Modalidades em que compete</FormLabel>
+                <FormControl>
+                  <MultiSelect
+                    options={modalityOptions}
+                    value={field.value ?? []}
+                    onChange={field.onChange}
+                    placeholder="Selecione modalidades…"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <div className="flex justify-end pt-2">
+          <Button type="submit" disabled={pending}>
+            {pending ? "Salvando…" : "Salvar alterações"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

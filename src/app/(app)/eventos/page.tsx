@@ -23,7 +23,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { EmptyState } from "@/components/app/empty-state";
 import { NewEventButton } from "./new-event-button";
 import { EventRowActions } from "./row-actions";
-import type { EventFormValues } from "./actions";
+import type { EventFormValues } from "@/lib/validations/event";
 
 export default async function EventsPage() {
   await requireRole(["DIRECTOR", "ADMIN"]);

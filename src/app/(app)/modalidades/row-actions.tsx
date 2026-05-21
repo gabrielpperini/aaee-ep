@@ -10,8 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { ModalityFormValues } from "@/lib/validations/modality";
 import { ModalityDialog } from "./modality-dialog";
-import { deleteModality, type ModalityFormValues } from "./actions";
+import { deleteModality } from "./actions";
 
 type Props = {
   modality: {
@@ -31,8 +32,11 @@ export function ModalityRowActions({ modality }: Props) {
     if (!confirm(`Excluir modalidade "${modality.name}"?`)) return;
     startTransition(async () => {
       const result = await deleteModality(modality.id);
-      if (!result.ok) toast.error(result.error);
-      else toast.success("Modalidade excluída");
+      if (result.status === "error") {
+        toast.error(result.formError ?? "Não foi possível excluir.");
+      } else if (result.status === "success") {
+        toast.success("Modalidade excluída");
+      }
     });
   }
 
@@ -43,8 +47,8 @@ export function ModalityRowActions({ modality }: Props) {
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>Editar</DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleDelete} variant="destructive">
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDelete} variant="destructive">
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>

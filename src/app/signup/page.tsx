@@ -1,74 +1,106 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowRight, MailCheck } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PhoneInput } from "@/components/phone-input";
 import { BrandMark } from "@/components/brand-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { COURSE_OPTIONS } from "@/lib/format";
+import { signupSchema, type SignupValues } from "@/lib/validations/auth";
 import { setupNewAccount } from "./actions";
+
+const SEMESTERS = Array.from({ length: 10 }, (_, i) => i + 1);
+const SEMESTER_LABELS: Record<string, string> = Object.fromEntries(
+  SEMESTERS.map((s) => [String(s), `${s}º`]),
+);
+
+const defaultValues: SignupValues = {
+  name: "",
+  nickname: "",
+  phone: "",
+  course: "" as SignupValues["course"],
+  semester: "" as SignupValues["semester"],
+  email: "",
+  password: "",
+  confirm: "",
+};
 
 export default function SignupPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-
   const supabase = createSupabaseBrowserClient();
+  const [pending, startTransition] = useTransition();
+  const [emailSent, setEmailSent] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const form = useForm<SignupValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues,
+  });
 
-    if (password.length < 8) {
-      toast.error("Senha precisa ter pelo menos 8 caracteres.");
-      return;
-    }
-    if (password !== confirm) {
-      toast.error("As senhas não conferem.");
-      return;
-    }
+  const submit = form.handleSubmit((values) => {
+    startTransition(async () => {
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: { data: { name: values.name } },
+      });
 
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    });
+      if (error) {
+        toast.error("Não consegui criar a conta", { description: error.message });
+        return;
+      }
 
-    if (error) {
-      setLoading(false);
-      toast.error("Não consegui criar a conta", { description: error.message });
-      return;
-    }
+      if (!data.session) {
+        setEmailSent(values.email);
+        return;
+      }
 
-    if (!data.session) {
-      setLoading(false);
-      setEmailSent(true);
-      return;
-    }
+      const result = await setupNewAccount({
+        name: values.name,
+        nickname: values.nickname,
+        phone: values.phone,
+        course: values.course,
+        semester: values.semester,
+      });
 
-    const result = await setupNewAccount({ name });
-    setLoading(false);
+      if (result.status === "error") {
+        toast.error("Conta criada, mas falhou ao salvar perfil", {
+          description: result.formError ?? "Erro desconhecido",
+        });
+        router.replace("/perfil");
+        router.refresh();
+        return;
+      }
 
-    if (!result.ok) {
-      toast.error("Conta criada, mas falhou ao salvar perfil", { description: result.error });
+      toast.success("Bem-vindo à delegação!");
       router.replace("/perfil");
       router.refresh();
-      return;
-    }
-
-    toast.success("Bem-vindo à delegação!");
-    router.replace("/perfil");
-    router.refresh();
-  }
+    });
+  });
 
   return (
     <div className="relative flex flex-1 min-h-screen">
@@ -88,8 +120,10 @@ export default function SignupPage() {
                 Confirme seu email
               </h1>
               <p className="mt-3 max-w-sm text-pretty text-muted-foreground">
-                Enviamos um link para <strong className="text-foreground">{email}</strong>.
-                Clique nele para ativar sua conta — depois você entra com a senha que acabou de criar.
+                Enviamos um link para{" "}
+                <strong className="text-foreground">{emailSent}</strong>. Clique
+                nele para ativar sua conta — depois você entra com a senha que
+                acabou de criar.
               </p>
             </div>
             <Link
@@ -112,7 +146,11 @@ export default function SignupPage() {
                       "radial-gradient(circle, color-mix(in oklch, var(--cyan) 38%, transparent), transparent 70%)",
                   }}
                 />
-                <BrandMark size={92} priority className="relative drop-shadow-[0_8px_20px_rgba(14,30,46,0.25)]" />
+                <BrandMark
+                  size={92}
+                  priority
+                  className="relative drop-shadow-[0_8px_20px_rgba(14,30,46,0.25)]"
+                />
               </div>
               <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 AAEE · Engenharia UFRGS
@@ -134,70 +172,186 @@ export default function SignupPage() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome completo</Label>
-                <Input
-                  id="name"
-                  required
-                  autoComplete="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Maria Silva"
+            <Form {...form}>
+              <form onSubmit={submit} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome completo</FormLabel>
+                      <FormControl>
+                        <Input
+                          autoComplete="name"
+                          placeholder="Maria Silva"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="voce@email.com"
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="mín. 8 caracteres"
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="nickname"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Apelido</FormLabel>
+                        <FormControl>
+                          <Input
+                            autoComplete="nickname"
+                            placeholder="Como te chamam"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefone (WhatsApp)</FormLabel>
+                        <FormControl>
+                          <PhoneInput
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm">Confirmar</Label>
-                  <Input
-                    id="confirm"
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    minLength={8}
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
+
+                <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
+                  <FormField
+                    control={form.control}
+                    name="course"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Curso</FormLabel>
+                        <FormControl>
+                          <Combobox
+                            options={COURSE_OPTIONS.map((c) => ({
+                              value: c.value,
+                              label: c.label,
+                            }))}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Selecione…"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="semester"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Semestre</FormLabel>
+                        <Select
+                          items={SEMESTER_LABELS}
+                          value={field.value === "" ? undefined : String(field.value)}
+                          onValueChange={(v) =>
+                            field.onChange(v ? Number(v) : "")
+                          }
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {SEMESTERS.map((s) => (
+                              <SelectItem key={s} value={String(s)}>
+                                {s}º
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading || !name || !email || !password}
-              >
-                {loading ? "Criando…" : "Criar conta"}
-                {!loading && <ArrowRight className="ml-1 h-4 w-4" />}
-              </Button>
-            </form>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          autoComplete="email"
+                          placeholder="voce@email.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Senha</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder="8+ com letra e número"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="confirm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirmar</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            autoComplete="new-password"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" disabled={pending}>
+                  {pending ? "Criando…" : "Criar conta"}
+                  {!pending && <ArrowRight className="ml-1 h-4 w-4" />}
+                </Button>
+              </form>
+            </Form>
 
             <p className="mt-8 text-center text-sm text-muted-foreground">
               Já tem conta?{" "}
-              <Link href="/login" className="font-semibold text-primary hover:underline">
+              <Link
+                href="/login"
+                className="font-semibold text-primary hover:underline"
+              >
                 Entrar
               </Link>
             </p>
@@ -220,14 +374,24 @@ function BrandSide() {
             "radial-gradient(900px circle at 100% 0%, color-mix(in oklch, var(--cyan) 28%, transparent), transparent 55%), radial-gradient(700px circle at 0% 100%, color-mix(in oklch, var(--primary) 60%, transparent), transparent 60%)",
         }}
       />
-      <div aria-hidden className="field-lines pointer-events-none absolute inset-0 text-sidebar-foreground/40 opacity-[0.12]" />
+      <div
+        aria-hidden
+        className="field-lines pointer-events-none absolute inset-0 text-sidebar-foreground/40 opacity-[0.12]"
+      />
 
-      <div aria-hidden className="pointer-events-none absolute -top-10 -right-10 opacity-[0.10] select-none">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-10 -right-10 opacity-[0.10] select-none"
+      >
         <BrandMark size={420} alt="" />
       </div>
 
       <div className="relative z-10 flex items-center gap-3">
-        <BrandMark size={52} priority className="drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)]" />
+        <BrandMark
+          size={52}
+          priority
+          className="drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)]"
+        />
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan">
             AAEE · UFRGS
@@ -246,13 +410,16 @@ function BrandSide() {
           Faça parte do{" "}
           <span className="relative inline-block">
             <span className="relative z-10">time</span>
-            <span aria-hidden className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-cyan/70" />
+            <span
+              aria-hidden
+              className="absolute inset-x-0 bottom-1 h-3 -z-0 bg-cyan/70"
+            />
           </span>
           .
         </h2>
         <p className="mt-5 text-sm text-sidebar-foreground/75 text-pretty">
-          Atletas, torcida, apoio e diretoria — todo mundo cabe no painel. Você se cadastra,
-          a gente sincroniza com o time da delegação.
+          Atletas, torcida, apoio e diretoria — todo mundo cabe no painel. Você
+          se cadastra, a gente sincroniza com o time da delegação.
         </p>
       </div>
 

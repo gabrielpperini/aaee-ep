@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PersonDialog } from "./person-dialog";
-import { deletePerson, type PersonFormValues } from "./actions";
+import type { PersonFormValues } from "@/lib/validations/person";
+import { deletePerson } from "./actions";
 
 type Props = {
   person: {
@@ -38,8 +39,11 @@ export function PersonRowActions({ person, modalities }: Props) {
     if (!confirm(`Excluir "${person.name}"?`)) return;
     startTransition(async () => {
       const result = await deletePerson(person.id);
-      if (!result.ok) toast.error(result.error);
-      else toast.success("Pessoa excluída");
+      if (result.status === "error") {
+        toast.error(result.formError ?? "Não foi possível excluir.");
+      } else if (result.status === "success") {
+        toast.success("Pessoa excluída");
+      }
     });
   }
 
@@ -64,8 +68,8 @@ export function PersonRowActions({ person, modalities }: Props) {
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>Editar</DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleDelete} variant="destructive">
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDelete} variant="destructive">
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>

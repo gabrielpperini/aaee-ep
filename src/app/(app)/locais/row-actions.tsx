@@ -31,8 +31,11 @@ export function LocationRowActions({ location }: Props) {
     if (!confirm(`Excluir "${location.name}"?`)) return;
     startTransition(async () => {
       const result = await deleteLocation(location.id);
-      if (!result.ok) toast.error(result.error);
-      else toast.success("Local excluído");
+      if (result.status === "error") {
+        toast.error(result.formError ?? "Não foi possível excluir.");
+      } else if (result.status === "success") {
+        toast.success("Local excluído");
+      }
     });
   }
 
@@ -43,8 +46,8 @@ export function LocationRowActions({ location }: Props) {
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setEditOpen(true)}>Editar</DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleDelete} variant="destructive">
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>
+          <DropdownMenuItem onClick={handleDelete} variant="destructive">
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -1,33 +1,27 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
+import {
+  failure,
+  fieldErrorsFromZod,
+  fieldFailure,
+  success,
+  type FormState,
+} from "@/lib/validations/_action-result";
+import { personSchema, type PersonFormValues } from "@/lib/validations/person";
+import { phoneDigits } from "@/lib/validations/_primitives";
 
-const PersonSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, "Nome é obrigatório").max(120),
-  nickname: z.string().max(60).optional().or(z.literal("")),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  phone: z.string().max(40).optional().or(z.literal("")),
-  isAthlete: z.boolean().default(false),
-  isSupporter: z.boolean().default(true),
-  isDirector: z.boolean().default(false),
-  isSupport: z.boolean().default(false),
-  notes: z.string().max(500).optional().or(z.literal("")),
-  modalityIds: z.array(z.string()).default([]),
-});
-
-export type PersonFormValues = z.infer<typeof PersonSchema>;
-export type ActionResult = { ok: true } | { ok: false; error: string };
-
-export async function savePerson(input: PersonFormValues): Promise<ActionResult> {
+export async function savePerson(
+  _prev: FormState,
+  input: PersonFormValues,
+): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
 
-  const parsed = PersonSchema.safeParse(input);
+  const parsed = personSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+    return fieldFailure(fieldErrorsFromZod(parsed.error));
   }
 
   const { id, modalityIds, name, nickname, email, phone, notes, ...flags } = parsed.data;
@@ -35,7 +29,7 @@ export async function savePerson(input: PersonFormValues): Promise<ActionResult>
     name,
     nickname: nickname?.trim() || null,
     email: email?.trim().toLowerCase() || null,
-    phone: phone?.trim() || null,
+    phone: phone ? phoneDigits(phone) || null : null,
     notes: notes?.trim() || null,
     ...flags,
   };
@@ -62,16 +56,16 @@ export async function savePerson(input: PersonFormValues): Promise<ActionResult>
   }
 
   revalidatePath("/pessoas");
-  return { ok: true };
+  return success();
 }
 
-export async function deletePerson(id: string): Promise<ActionResult> {
+export async function deletePerson(id: string): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
   try {
     await prisma.person.delete({ where: { id } });
   } catch {
-    return { ok: false, error: "Não foi possível excluir." };
+    return failure("Não foi possível excluir.");
   }
   revalidatePath("/pessoas");
-  return { ok: true };
+  return success();
 }

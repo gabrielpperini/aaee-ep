@@ -1,39 +1,51 @@
 "use server";
 
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-const SetupSchema = z.object({
-  name: z.string().min(1, "Nome obrigatório").max(120),
-});
-
-export type ActionResult = { ok: true } | { ok: false; error: string };
+import {
+  failure,
+  fieldErrorsFromZod,
+  fieldFailure,
+  success,
+  type FormState,
+} from "@/lib/validations/_action-result";
+import {
+  setupAccountSchema,
+  type SetupAccountValues,
+} from "@/lib/validations/auth";
+import { phoneDigits } from "@/lib/validations/_primitives";
 
 /**
  * Após `supabase.auth.signUp` no cliente devolver uma sessão (cookies já setados),
- * o front chama esta server action passando o nome digitado no formulário.
- *
- * - Garante que existe um User no nosso banco (auto-cria igual `getCurrentUser`)
- * - Tenta auto-linkar com um Person pré-cadastrado pelo email (mesma lógica do
- *   `getCurrentUser`); se achar exatamente um, vincula e seta o nome se vazio
- * - Caso contrário, cria um Person novo já vinculado ao User
+ * o front chama esta server action passando o nome + extras do formulário.
  */
-export async function setupNewAccount(input: { name: string }): Promise<ActionResult> {
+export async function setupNewAccount(
+  input: SetupAccountValues,
+): Promise<FormState> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser();
 
-  if (!authUser) return { ok: false, error: "Sessão não encontrada — faça login novamente." };
+  if (!authUser)
+    return failure("Sessão não encontrada — faça login novamente.");
 
-  const parsed = SetupSchema.safeParse(input);
+  const parsed = setupAccountSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+    return fieldFailure(fieldErrorsFromZod(parsed.error));
   }
 
-  const name = parsed.data.name.trim();
+  const { name, nickname, phone, course, semester } = parsed.data;
   const normalizedEmail = authUser.email?.trim().toLowerCase() ?? null;
+  const phoneNum = phone ? phoneDigits(phone) || null : null;
+
+  const personData = {
+    name: name.trim(),
+    nickname: nickname?.trim() || null,
+    phone: phoneNum,
+    course: course === "" ? null : course,
+    semester: semester === "" ? null : semester,
+  };
 
   await prisma.$transaction(async (tx) => {
     let user = await tx.user.findUnique({ where: { authUserId: authUser.id } });
@@ -42,8 +54,13 @@ export async function setupNewAccount(input: { name: string }): Promise<ActionRe
         data: {
           authUserId: authUser.id,
           email: normalizedEmail,
-          phone: authUser.phone ?? null,
+          phone: phoneNum || authUser.phone || null,
         },
+      });
+    } else if (phoneNum && !user.phone) {
+      user = await tx.user.update({
+        where: { id: user.id },
+        data: { phone: phoneNum },
       });
     }
 
@@ -57,25 +74,45 @@ export async function setupNewAccount(input: { name: string }): Promise<ActionRe
       });
 
       if (candidates.length === 1) {
+        const target = candidates[0];
         await tx.person.update({
-          where: { id: candidates[0].id },
-          data: { userId: user.id },
+          where: { id: target.id },
+          data: {
+            userId: user.id,
+            name: target.name || personData.name,
+            nickname: target.nickname ?? personData.nickname,
+            phone: target.phone ?? personData.phone,
+            course: target.course ?? personData.course,
+            semester: target.semester ?? personData.semester,
+          },
         });
         return;
       }
     }
 
     const existing = await tx.person.findUnique({ where: { userId: user.id } });
-    if (existing) return;
+    if (existing) {
+      await tx.person.update({
+        where: { id: existing.id },
+        data: {
+          name: existing.name || personData.name,
+          nickname: existing.nickname ?? personData.nickname,
+          phone: existing.phone ?? personData.phone,
+          course: existing.course ?? personData.course,
+          semester: existing.semester ?? personData.semester,
+        },
+      });
+      return;
+    }
 
     await tx.person.create({
       data: {
+        ...personData,
         userId: user.id,
-        name,
         email: normalizedEmail,
       },
     });
   });
 
-  return { ok: true };
+  return success();
 }
