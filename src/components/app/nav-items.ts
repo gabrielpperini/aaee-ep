@@ -7,6 +7,8 @@ import {
   Volleyball,
   UserCircle,
   Shield,
+  Gauge,
+  Clock,
 } from "lucide-react";
 import type { Role } from "@/generated/prisma/client";
 
@@ -21,7 +23,9 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Início", icon: LayoutDashboard, group: "main" },
   { href: "/agenda", label: "Agenda", icon: Calendar, group: "main" },
+  { href: "/disponibilidade", label: "Meu horário", icon: Clock, group: "main" },
   { href: "/perfil", label: "Meu perfil", icon: UserCircle, group: "main" },
+  { href: "/dashboard", label: "Dashboard", icon: Gauge, minRole: "DIRECTOR", group: "manage" },
   { href: "/eventos", label: "Eventos", icon: Volleyball, minRole: "DIRECTOR", group: "manage" },
   { href: "/pessoas", label: "Pessoas", icon: Users, minRole: "DIRECTOR", group: "manage" },
   { href: "/modalidades", label: "Modalidades", icon: Trophy, minRole: "DIRECTOR", group: "manage" },
