@@ -25,7 +25,7 @@ export default async function AdminUsersPage() {
     prisma.person.findMany({
       where: { userId: null },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, nickname: true, email: true },
+      select: { id: true, name: true, nickname: true, email: true, phone: true },
     }),
   ]);
 

@@ -18,9 +18,20 @@ import {
 } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
 import { MapsLink } from "@/components/app/maps-link";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { AllocationPanel } from "./allocation-panel";
 import { CheckInButton } from "./checkin-button";
 import { EventStatusActions } from "./event-status-actions";
+
+function eventGreeting(
+  nickname: string | null,
+  name: string,
+  eventTitle: string,
+  when: Date,
+): string {
+  const greeting = nickname || name.split(" ")[0];
+  return `Oi ${greeting}, tudo bem? Sobre o evento ${eventTitle} em ${formatDateTime(when)}...`;
+}
 
 export default async function EventDetailPage({
   params,
@@ -35,13 +46,13 @@ export default async function EventDetailPage({
     include: {
       modality: { select: { id: true, name: true } },
       location: { select: { id: true, name: true, address: true } },
-      athletes: { include: { person: { select: { id: true, name: true, nickname: true } } } },
+      athletes: { include: { person: { select: { id: true, name: true, nickname: true, phone: true } } } },
       assignments: {
-        include: { person: { select: { id: true, name: true, nickname: true } } },
+        include: { person: { select: { id: true, name: true, nickname: true, phone: true } } },
         orderBy: [{ isCaptain: "desc" }, { role: "asc" }],
       },
       checkIns: {
-        include: { person: { select: { id: true, name: true, nickname: true } } },
+        include: { person: { select: { id: true, name: true, nickname: true, phone: true } } },
         orderBy: { checkedAt: "asc" },
       },
     },
@@ -59,6 +70,7 @@ export default async function EventDetailPage({
     id: string;
     name: string;
     nickname: string | null;
+    phone: string | null;
     conflict: { eventId: string; title: string } | null;
     competingElsewhere: { eventId: string; title: string } | null;
   }> = [];
@@ -73,7 +85,7 @@ export default async function EventDetailPage({
           id: { notIn: [...assignedIds, ...competingIds] },
         },
         orderBy: [{ name: "asc" }],
-        select: { id: true, name: true, nickname: true },
+        select: { id: true, name: true, nickname: true, phone: true },
       }),
       prisma.assignment.findMany({
         where: {
@@ -228,11 +240,22 @@ export default async function EventDetailPage({
                         {a.isCaptain && <Badge className="text-[10px]">Capitão</Badge>}
                       </div>
                     </div>
-                    {event.checkIns.some((c) => c.personId === a.personId) && (
-                      <Badge variant="outline" className="text-[10px]">
-                        Presente
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {event.checkIns.some((c) => c.personId === a.personId) && (
+                        <Badge variant="outline" className="text-[10px]">
+                          Presente
+                        </Badge>
+                      )}
+                      <WhatsAppButton
+                        phone={a.person.phone}
+                        message={eventGreeting(
+                          a.person.nickname,
+                          a.person.name,
+                          event.title,
+                          event.startTime,
+                        )}
+                      />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -256,11 +279,14 @@ export default async function EventDetailPage({
               />
               <AllocationPanel
                 eventId={event.id}
+                eventTitle={event.title}
+                eventStartTime={event.startTime}
                 desiredSupportersCount={event.desiredSupportersCount}
                 assignments={event.assignments.map((a) => ({
                   personId: a.personId,
                   name: a.person.name,
                   nickname: a.person.nickname,
+                  phone: a.person.phone,
                   role: a.role,
                   isCaptain: a.isCaptain,
                   notes: a.notes,
@@ -286,9 +312,20 @@ export default async function EventDetailPage({
                     <span className="font-medium">
                       {c.person.nickname || c.person.name}
                     </span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      {formatDateTime(c.checkedAt)}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {formatDateTime(c.checkedAt)}
+                      </span>
+                      <WhatsAppButton
+                        phone={c.person.phone}
+                        message={eventGreeting(
+                          c.person.nickname,
+                          c.person.name,
+                          event.title,
+                          event.startTime,
+                        )}
+                      />
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -13,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ASSIGNMENT_ROLE_LABELS } from "@/lib/format";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { ASSIGNMENT_ROLE_LABELS, formatDateTime } from "@/lib/format";
 import type { AssignmentRole } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { removeAssignment, upsertAssignment } from "./actions";
@@ -22,6 +23,7 @@ type AssignmentItem = {
   personId: string;
   name: string;
   nickname: string | null;
+  phone: string | null;
   role: AssignmentRole;
   isCaptain: boolean;
   notes: string | null;
@@ -31,20 +33,40 @@ type AvailableItem = {
   id: string;
   name: string;
   nickname: string | null;
+  phone: string | null;
   conflict: { eventId: string; title: string } | null;
   competingElsewhere: { eventId: string; title: string } | null;
 };
 
 type Props = {
   eventId: string;
+  eventTitle: string;
+  eventStartTime: Date;
   desiredSupportersCount: number;
   assignments: AssignmentItem[];
   available: AvailableItem[];
 };
 
+function eventGreeting(
+  nickname: string | null,
+  name: string,
+  eventTitle: string,
+  when: Date,
+): string {
+  const greeting = nickname || name.split(" ")[0];
+  return `Oi ${greeting}, tudo bem? Sobre o evento ${eventTitle} em ${formatDateTime(when)}...`;
+}
+
 const ROLE_OPTIONS: AssignmentRole[] = ["SUPPORTER", "CAPTAIN", "MATERIAL_LEAD", "SUPPORT"];
 
-export function AllocationPanel({ eventId, desiredSupportersCount, assignments, available }: Props) {
+export function AllocationPanel({
+  eventId,
+  eventTitle,
+  eventStartTime,
+  desiredSupportersCount,
+  assignments,
+  available,
+}: Props) {
   const [search, setSearch] = useState("");
   const [hideConflicts, setHideConflicts] = useState(true);
   const [busyPerson, setBusyPerson] = useState<string | null>(null);
@@ -178,15 +200,22 @@ export function AllocationPanel({ eventId, desiredSupportersCount, assignments, 
                       </div>
                     )}
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={busyPerson !== null}
-                    onClick={() => add(p.id)}
-                  >
-                    Escalar
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <WhatsAppButton
+                      phone={p.phone}
+                      message={eventGreeting(p.nickname, p.name, eventTitle, eventStartTime)}
+                      size="icon-xs"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={busyPerson !== null}
+                      onClick={() => add(p.id)}
+                    >
+                      Escalar
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -222,14 +251,21 @@ export function AllocationPanel({ eventId, desiredSupportersCount, assignments, 
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => remove(a.personId)}
-                    className="text-muted-foreground hover:text-destructive"
-                    aria-label="Remover"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <WhatsAppButton
+                      phone={a.phone}
+                      message={eventGreeting(a.nickname, a.name, eventTitle, eventStartTime)}
+                      size="icon-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => remove(a.personId)}
+                      className="text-muted-foreground hover:text-destructive"
+                      aria-label="Remover"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Select

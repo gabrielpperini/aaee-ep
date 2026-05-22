@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { COURSE_LABELS } from "@/lib/format";
 import type { Role, Course } from "@/generated/prisma/client";
+import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { UserRowActions } from "./row-actions";
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -49,6 +50,7 @@ export type UnlinkedPerson = {
   name: string;
   nickname: string | null;
   email: string | null;
+  phone: string | null;
 };
 
 export function UsersTable({
@@ -115,7 +117,10 @@ export function UsersTable({
                     {u.email ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell className="text-muted-foreground tabular-nums">
-                    {u.phone || "—"}
+                    <div className="flex items-center gap-1.5">
+                      <span>{u.phone || "—"}</span>
+                      {u.phone && <WhatsAppButton phone={u.phone} size="icon-xs" />}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant={ROLE_VARIANT[u.role]}>{ROLE_LABEL[u.role]}</Badge>
@@ -163,6 +168,7 @@ export function UsersTable({
                   <TableHead>Nome</TableHead>
                   <TableHead>Apelido</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead className="w-12" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -171,6 +177,9 @@ export function UsersTable({
                     <TableCell className="font-medium">{p.name}</TableCell>
                     <TableCell className="text-muted-foreground">{p.nickname || "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{p.email || "—"}</TableCell>
+                    <TableCell>
+                      <WhatsAppButton phone={p.phone} size="icon-xs" />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

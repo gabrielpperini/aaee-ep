@@ -23,3 +23,18 @@ export function isValidBrPhone(value: string): boolean {
 export function phoneDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
+
+/**
+ * Monta uma URL `wa.me` a partir de um telefone BR.
+ * Retorna `null` se o telefone não tem 10 ou 11 dígitos.
+ */
+export function whatsappUrl(
+  phone: string | null | undefined,
+  message?: string,
+): string | null {
+  const digits = phoneDigits(phone ?? "");
+  if (digits.length !== 10 && digits.length !== 11) return null;
+  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+  const base = `https://wa.me/${withCountry}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
