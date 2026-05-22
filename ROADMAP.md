@@ -6,11 +6,12 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 ## Stack escolhida
 
-- **Next.js 15** (App Router) + **TypeScript**
-- **Supabase** (Postgres + Auth + Storage)
-- **Prisma** como ORM, conectado ao Postgres do Supabase
-- **Tailwind CSS** + **shadcn/ui** para UI
-- **Zod** + **React Hook Form** para validação de formulários
+- **Next.js 16** (App Router, Turbopack, Server Actions com `useActionState`)
+- **React 19** + **TypeScript**
+- **Supabase** (Postgres + Auth com email/senha + OTP + Storage)
+- **Prisma 7** com `@prisma/adapter-pg` (adapter PG nativo, sem engine binário)
+- **Tailwind CSS v4** + **shadcn/ui** style `base-nova` (sobre `@base-ui/react`)
+- **React Hook Form** + **Zod** com schemas centralizados em `src/lib/validations/`
 - **TanStack Query** para cache no cliente e, na fase 3, sincronização offline
 - **Dexie.js** + **Service Worker** (fase 3) para IndexedDB e PWA
 - Deploy na **Vercel**
