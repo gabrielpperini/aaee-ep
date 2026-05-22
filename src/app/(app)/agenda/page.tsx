@@ -10,6 +10,7 @@ import {
   statusVariant,
 } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
+import { EP_DAY_SHORT_LABEL, formatEpDayDate, getEpEdition } from "@/lib/ep-edition";
 import { cn } from "@/lib/utils";
 
 type SearchParams = { day?: string };
@@ -21,16 +22,19 @@ export default async function AgendaPage({
 }) {
   const user = await requireUser();
   const { day } = await searchParams;
-  const selectedDay = day ? Number(day) : undefined;
+  const selectedDay = day !== undefined && day !== "" ? Number(day) : undefined;
 
-  const events = await prisma.event.findMany({
-    where: selectedDay ? { day: selectedDay } : undefined,
-    orderBy: [{ day: "asc" }, { startTime: "asc" }],
-    include: {
-      modality: { select: { name: true } },
-      location: { select: { name: true } },
-    },
-  });
+  const [events, edition] = await Promise.all([
+    prisma.event.findMany({
+      where: selectedDay !== undefined ? { day: selectedDay } : undefined,
+      orderBy: [{ day: "asc" }, { startTime: "asc" }],
+      include: {
+        modality: { select: { name: true } },
+        location: { select: { name: true, address: true } },
+      },
+    }),
+    getEpEdition(),
+  ]);
 
   const byDay = new Map<number, typeof events>();
   for (const e of events) {
@@ -47,8 +51,8 @@ export default async function AgendaPage({
         description="Programação completa da delegação — filtre por dia para focar."
         actions={
           <div className="flex flex-wrap gap-1.5">
-            <DayChip day={null} active={!selectedDay} />
-            {[1, 2, 3].map((d) => (
+            <DayChip day={null} active={selectedDay === undefined} />
+            {[-1, 0, 1, 2, 3, 4].map((d) => (
               <DayChip key={d} day={d} active={selectedDay === d} />
             ))}
           </div>
@@ -68,7 +72,11 @@ export default async function AgendaPage({
         <div className="space-y-10">
           {days.map((d) => (
             <section key={d} className="relative">
-              <DayHeader day={d} count={byDay.get(d)!.length} />
+              <DayHeader
+                day={d}
+                count={byDay.get(d)!.length}
+                dateLabel={formatEpDayDate(edition.byDay[d])}
+              />
               <ul className="mt-4 space-y-3">
                 {byDay.get(d)!.map((e) => (
                   <li key={e.id}>
@@ -135,15 +143,24 @@ export default async function AgendaPage({
   );
 }
 
-function DayHeader({ day, count }: { day: number; count: number }) {
+function DayHeader({ day, count, dateLabel }: { day: number; count: number; dateLabel: string | null }) {
+  const label = EP_DAY_SHORT_LABEL[day] ?? `Dia ${day}`;
+  const numericPart = day >= 1 && day <= 3 ? String(day).padStart(2, "0") : null;
   return (
     <div className="flex items-end gap-4">
-      <span className="stencil-number text-6xl sm:text-7xl leading-none text-foreground">
-        {String(day).padStart(2, "0")}
-      </span>
+      {numericPart ? (
+        <span className="stencil-number text-6xl sm:text-7xl leading-none text-foreground">
+          {numericPart}
+        </span>
+      ) : (
+        <span className="font-display text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+          {label}
+        </span>
+      )}
       <div className="pb-1">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Dia do EP
+          {numericPart ? `${label} do EP` : "Logística"}
+          {dateLabel ? ` · ${dateLabel}` : ""}
         </p>
         <p className="font-display text-xl font-semibold tracking-tight">
           {count} {count === 1 ? "evento" : "eventos"}
@@ -160,7 +177,7 @@ function formatTimeOnly(d: Date) {
 
 function DayChip({ day, active }: { day: number | null; active: boolean }) {
   const href = day === null ? "/agenda" : `/agenda?day=${day}`;
-  const label = day === null ? "Todos" : `Dia ${day}`;
+  const label = day === null ? "Todos" : (EP_DAY_SHORT_LABEL[day] ?? `Dia ${day}`);
   return (
     <Link
       href={href}

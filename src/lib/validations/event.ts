@@ -15,7 +15,7 @@ export const eventSchema = z
     modalityId: z.string().min(1, "Selecione uma modalidade"),
     title: requiredText("Título", 180),
     description: optionalText(1000),
-    day: z.number().int().min(1).max(3),
+    day: z.number().int().min(-1).max(4),
     startTime: datetimeLocal,
     endTime: datetimeLocal,
     locationId: z.string(),

@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { EmptyState } from "@/components/app/empty-state";
+import { MapsLink } from "@/components/app/maps-link";
 import { NewLocationButton } from "./new-location-button";
 import { LocationRowActions } from "./row-actions";
 
@@ -43,6 +44,7 @@ export default async function LocationsPage() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Endereço</TableHead>
+                <TableHead className="w-16">Mapa</TableHead>
                 <TableHead className="text-right">Eventos</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
@@ -52,6 +54,9 @@ export default async function LocationsPage() {
                 <TableRow key={loc.id}>
                   <TableCell className="font-medium">{loc.name}</TableCell>
                   <TableCell className="text-muted-foreground">{loc.address || "—"}</TableCell>
+                  <TableCell>
+                    <MapsLink address={loc.address} variant="icon" />
+                  </TableCell>
                   <TableCell className="text-right tabular-nums">{loc._count.events}</TableCell>
                   <TableCell>
                     <LocationRowActions location={loc} />

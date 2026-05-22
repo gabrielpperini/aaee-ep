@@ -187,15 +187,22 @@ export function EventDialog({
                       <RadioGroup
                         value={String(field.value)}
                         onValueChange={(v) => field.onChange(Number(v))}
-                        className="flex gap-4"
+                        className="flex flex-wrap gap-3"
                       >
-                        {[1, 2, 3].map((n) => (
+                        {[
+                          { v: -1, label: "Ida" },
+                          { v: 0, label: "Véspera" },
+                          { v: 1, label: "Dia 1" },
+                          { v: 2, label: "Dia 2" },
+                          { v: 3, label: "Dia 3" },
+                          { v: 4, label: "Volta" },
+                        ].map(({ v, label }) => (
                           <label
-                            key={n}
+                            key={v}
                             className="flex items-center gap-2 text-sm cursor-pointer"
                           >
-                            <RadioGroupItem value={String(n)} />
-                            Dia {n}
+                            <RadioGroupItem value={String(v)} />
+                            {label}
                           </label>
                         ))}
                       </RadioGroup>

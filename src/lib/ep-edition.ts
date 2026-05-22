@@ -1,0 +1,56 @@
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { prisma } from "@/lib/prisma";
+
+/** Singleton id da edição atual do EP. */
+export const EP_EDITION_ID = "current";
+
+/** Dias modeláveis no EP. -1=ida, 0=véspera, 1..3=competição, 4=volta. */
+export const EP_DAYS = [-1, 0, 1, 2, 3, 4] as const;
+export type EpDay = (typeof EP_DAYS)[number];
+
+/** Label curto de cada day. Usado em badges/headers. */
+export const EP_DAY_SHORT_LABEL: Record<number, string> = {
+  [-1]: "Ida",
+  0: "Véspera",
+  1: "Dia 1",
+  2: "Dia 2",
+  3: "Dia 3",
+  4: "Volta",
+};
+
+/** Label longo (pra empty states / títulos). */
+export const EP_DAY_LONG_LABEL: Record<number, string> = {
+  [-1]: "Embarque / ida",
+  0: "Chegada / véspera",
+  1: "Dia 1 · competição",
+  2: "Dia 2 · competição",
+  3: "Dia 3 · competição",
+  4: "Volta / desembarque",
+};
+
+export type EpEditionDates = {
+  name: string | null;
+  byDay: Record<number, Date | null>;
+};
+
+export async function getEpEdition(): Promise<EpEditionDates> {
+  const row = await prisma.epEdition.findUnique({ where: { id: EP_EDITION_ID } });
+  return {
+    name: row?.name ?? null,
+    byDay: {
+      [-1]: row?.dayMinus1 ?? null,
+      0: row?.day0 ?? null,
+      1: row?.day1 ?? null,
+      2: row?.day2 ?? null,
+      3: row?.day3 ?? null,
+      4: row?.day4 ?? null,
+    },
+  };
+}
+
+/** Formata a data de um day como "qua, 22/05". Retorna null se não houver. */
+export function formatEpDayDate(date: Date | null | undefined): string | null {
+  if (!date) return null;
+  return format(date, "EEE, dd/MM", { locale: ptBR });
+}

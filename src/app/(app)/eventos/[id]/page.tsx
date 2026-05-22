@@ -16,6 +16,7 @@ import {
   statusVariant,
 } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
+import { MapsLink } from "@/components/app/maps-link";
 import { AllocationPanel } from "./allocation-panel";
 import { CheckInButton } from "./checkin-button";
 import { EventStatusActions } from "./event-status-actions";
@@ -32,7 +33,7 @@ export default async function EventDetailPage({
     where: { id },
     include: {
       modality: { select: { id: true, name: true } },
-      location: { select: { id: true, name: true } },
+      location: { select: { id: true, name: true, address: true } },
       athletes: { include: { person: { select: { id: true, name: true, nickname: true } } } },
       assignments: {
         include: { person: { select: { id: true, name: true, nickname: true } } },
@@ -157,6 +158,7 @@ export default async function EventDetailPage({
             </Badge>
             <Badge variant={statusVariant(event.status)}>{STATUS_LABELS[event.status]}</Badge>
             {event.isConditional && <Badge variant="outline">Condicional</Badge>}
+            <MapsLink address={event.location?.address} />
           </div>
         }
       />
