@@ -10,7 +10,8 @@ import {
   statusVariant,
 } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
-import { EP_DAY_SHORT_LABEL, formatEpDayDate, getEpEdition } from "@/lib/ep-edition";
+import { EP_DAY_SHORT_LABEL, formatEpDayDate } from "@/lib/ep-edition";
+import { getEpEdition } from "@/lib/ep-edition-server";
 import { cn } from "@/lib/utils";
 
 type SearchParams = { day?: string };

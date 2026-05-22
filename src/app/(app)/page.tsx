@@ -18,7 +18,8 @@ import {
   deriveEventStatus,
   formatEventTime,
 } from "@/lib/format";
-import { EP_DAY_SHORT_LABEL, formatEpDayDate, getEpEdition } from "@/lib/ep-edition";
+import { EP_DAY_SHORT_LABEL, formatEpDayDate } from "@/lib/ep-edition";
+import { getEpEdition } from "@/lib/ep-edition-server";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {

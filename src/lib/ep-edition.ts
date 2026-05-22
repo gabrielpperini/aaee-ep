@@ -1,6 +1,5 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { prisma } from "@/lib/prisma";
 
 /** Singleton id da edição atual do EP. */
 export const EP_EDITION_ID = "current";
@@ -33,21 +32,6 @@ export type EpEditionDates = {
   name: string | null;
   byDay: Record<number, Date | null>;
 };
-
-export async function getEpEdition(): Promise<EpEditionDates> {
-  const row = await prisma.epEdition.findUnique({ where: { id: EP_EDITION_ID } });
-  return {
-    name: row?.name ?? null,
-    byDay: {
-      [-1]: row?.dayMinus1 ?? null,
-      0: row?.day0 ?? null,
-      1: row?.day1 ?? null,
-      2: row?.day2 ?? null,
-      3: row?.day3 ?? null,
-      4: row?.day4 ?? null,
-    },
-  };
-}
 
 /** Formata a data de um day como "qua, 22/05". Retorna null se não houver. */
 export function formatEpDayDate(date: Date | null | undefined): string | null {

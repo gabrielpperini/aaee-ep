@@ -5,7 +5,8 @@ import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { MapsLink } from "@/components/app/maps-link";
 import { ASSIGNMENT_ROLE_LABELS, formatEventTime } from "@/lib/format";
-import { EP_DAY_SHORT_LABEL, formatEpDayDate, getEpEdition } from "@/lib/ep-edition";
+import { EP_DAY_SHORT_LABEL, formatEpDayDate } from "@/lib/ep-edition";
+import { getEpEdition } from "@/lib/ep-edition-server";
 
 type Item = {
   eventId: string;
