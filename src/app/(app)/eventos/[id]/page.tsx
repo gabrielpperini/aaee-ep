@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser, canManage } from "@/lib/auth";
 import {
   ASSIGNMENT_ROLE_LABELS,
+  COMMITTED_STATUSES,
   PHASE_LABELS,
   PRIORITY_LABELS,
   STATUS_LABELS,
@@ -80,7 +81,7 @@ export default async function EventDetailPage({
           event: {
             startTime: { lt: event.endTime },
             endTime: { gt: event.startTime },
-            status: { notIn: ["CANCELLED"] },
+            status: { in: COMMITTED_STATUSES },
           },
         },
         select: {
@@ -94,7 +95,7 @@ export default async function EventDetailPage({
           event: {
             startTime: { lt: event.endTime },
             endTime: { gt: event.startTime },
-            status: { notIn: ["CANCELLED"] },
+            status: { in: COMMITTED_STATUSES },
           },
         },
         select: {
@@ -245,7 +246,14 @@ export default async function EventDetailPage({
               <CardTitle>Painel da diretoria</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <EventStatusActions eventId={event.id} status={event.status} />
+              <EventStatusActions
+                eventId={event.id}
+                status={event.status}
+                counts={{
+                  assignments: event.assignments.length,
+                  checkIns: event.checkIns.length,
+                }}
+              />
               <AllocationPanel
                 eventId={event.id}
                 desiredSupportersCount={event.desiredSupportersCount}

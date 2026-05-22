@@ -2,8 +2,8 @@
 
 Aplicativo para organização da delegação da **Engenharia UFRGS** durante o **EP — Engenhariadas Paranaense**: disponibilidade, alocação de torcida, check-ins, capitães, materiais e operação offline-first.
 
-- Requisitos completos: [`requisitos-app-delegacao-ep.md`](./requisitos-app-delegacao-ep.md)
-- Roadmap por fases: [`ROADMAP.md`](./ROADMAP.md)
+- Requisitos completos: [`.specs/requisitos-app-delegacao-ep.md`](./.specs/requisitos-app-delegacao-ep.md)
+- Roadmap por fases: [`.specs/ROADMAP.md`](./.specs/ROADMAP.md)
 
 ## Status atual
 
@@ -21,7 +21,7 @@ Aplicativo para organização da delegação da **Engenharia UFRGS** durante o *
 - Agenda dos 3 dias com link pro detalhe do evento
 - PWA-ready: manifest, OG/Twitter dinâmicos via `next/og`, ícones via file convention
 
-**MVP 3** (offline-first + materiais) — em planejamento. Veja o [roadmap](./ROADMAP.md).
+**MVP 3** (offline-first + materiais) — em planejamento. Veja o [roadmap](./.specs/ROADMAP.md).
 
 ## Stack
 

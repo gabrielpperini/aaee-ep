@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { EventDialog } from "./event-dialog";
 import type { EventFormValues } from "@/lib/validations/event";
 import { deleteEvent } from "./actions";
@@ -30,24 +31,36 @@ type Props = {
 
 export function EventRowActions({ event, modalities, locations, athletes }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function handleDelete() {
-    if (!confirm(`Excluir evento "${event.title}"?`)) return;
-    startTransition(async () => {
-      const result = await deleteEvent(event.id);
-      if (result.status === "error") {
-        toast.error(result.formError ?? "Não foi possível excluir.");
-      } else if (result.status === "success") {
-        toast.success("Evento excluído");
-      }
+  function runDelete() {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await deleteEvent(event.id);
+        if (result.status === "error") {
+          toast.error(result.formError ?? "Não foi possível excluir.");
+        } else if (result.status === "success") {
+          toast.success("Evento excluído");
+        }
+        resolve();
+      });
     });
   }
 
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" disabled={pending} />}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pending}
+              aria-label={`Ações para ${event.title}`}
+            />
+          }
+        >
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -55,7 +68,7 @@ export function EventRowActions({ event, modalities, locations, athletes }: Prop
             Abrir detalhe
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>
-          <DropdownMenuItem onClick={handleDelete} variant="destructive">
+          <DropdownMenuItem onClick={() => setConfirmOpen(true)} variant="destructive">
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -67,6 +80,14 @@ export function EventRowActions({ event, modalities, locations, athletes }: Prop
         locations={locations}
         athletes={athletes}
         initial={event}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Excluir evento "${event.title}"?`}
+        description="Assignments e check-ins deste evento serão removidos em cascata."
+        confirmLabel="Excluir"
+        onConfirm={runDelete}
       />
     </>
   );

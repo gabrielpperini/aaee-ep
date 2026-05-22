@@ -45,10 +45,18 @@ export async function saveModality(
 
 export async function deleteModality(id: string): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
+
+  const eventCount = await prisma.event.count({ where: { modalityId: id } });
+  if (eventCount > 0) {
+    return failure(
+      `Esta modalidade tem ${eventCount} evento(s) vinculado(s). Reatribua ou exclua os eventos antes.`,
+    );
+  }
+
   try {
     await prisma.modality.delete({ where: { id } });
   } catch {
-    return failure("Não foi possível excluir (existem eventos vinculados).");
+    return failure("Não foi possível excluir: há registros vinculados.");
   }
   revalidatePath("/modalidades");
   return success();

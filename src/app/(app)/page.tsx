@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser, canManage } from "@/lib/auth";
 import {
   ASSIGNMENT_ROLE_LABELS,
+  COMMITTED_STATUSES,
   deriveEventStatus,
   formatEventTime,
 } from "@/lib/format";
@@ -56,7 +57,7 @@ async function MemberHome({
   const [myAssignments, myAthleteEvents, openEvents, stats] = await Promise.all([
     prisma.event.findMany({
       where: {
-        status: { notIn: ["CANCELLED"] },
+        status: { in: COMMITTED_STATUSES },
         endTime: { gte: now },
         assignments: { some: { personId } },
       },
@@ -72,7 +73,7 @@ async function MemberHome({
     }),
     prisma.event.findMany({
       where: {
-        status: { notIn: ["CANCELLED"] },
+        status: { in: COMMITTED_STATUSES },
         endTime: { gte: now },
         athletes: { some: { personId } },
       },
@@ -84,7 +85,7 @@ async function MemberHome({
     }),
     prisma.event.findMany({
       where: {
-        status: { notIn: ["CANCELLED"] },
+        status: { in: COMMITTED_STATUSES },
         endTime: { gte: now },
         assignments: { none: { personId } },
         athletes: { none: { personId } },

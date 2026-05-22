@@ -1,33 +1,8 @@
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/app/empty-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
-import { COURSE_LABELS } from "@/lib/format";
-import type { Role } from "@/generated/prisma/client";
-import { UserRowActions } from "./row-actions";
-
-const ROLE_LABEL: Record<Role, string> = {
-  USER: "Membro",
-  DIRECTOR: "Diretor",
-  ADMIN: "Admin",
-};
-
-const ROLE_VARIANT: Record<Role, "default" | "secondary" | "outline"> = {
-  USER: "outline",
-  DIRECTOR: "secondary",
-  ADMIN: "default",
-};
+import { UsersTable } from "./users-table";
 
 export default async function AdminUsersPage() {
   await requireRole(["ADMIN"]);
@@ -68,77 +43,7 @@ export default async function AdminUsersPage() {
           description="Os usuários aparecem aqui assim que entrarem pela primeira vez."
         />
       ) : (
-        <Card className="overflow-hidden p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Função</TableHead>
-                <TableHead>Pessoa vinculada</TableHead>
-                <TableHead>Curso / Sem.</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">
-                    {u.email ?? (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground tabular-nums">
-                    {u.phone || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={ROLE_VARIANT[u.role]}>
-                      {ROLE_LABEL[u.role]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {u.person ? (
-                      <Link
-                        href="/pessoas"
-                        className="text-sm hover:underline"
-                      >
-                        {u.person.name}
-                        {u.person.nickname ? (
-                          <span className="text-muted-foreground">
-                            {" "}
-                            ({u.person.nickname})
-                          </span>
-                        ) : null}
-                      </Link>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {u.person?.course ? COURSE_LABELS[u.person.course] : "—"}
-                    {u.person?.semester ? (
-                      <span className="text-muted-foreground/70">
-                        {" "}
-                        · {u.person.semester}º sem
-                      </span>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>
-                    <UserRowActions
-                      user={{
-                        id: u.id,
-                        email: u.email,
-                        role: u.role,
-                        person: u.person,
-                      }}
-                      unlinkedPersons={unlinkedPersons}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
+        <UsersTable users={users} unlinkedPersons={unlinkedPersons} />
       )}
     </div>
   );

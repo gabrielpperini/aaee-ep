@@ -107,7 +107,9 @@ model Person {
   userId      String?  @unique
   name        String
   nickname    String?
-  email       String?  // usado para auto-linking com User no primeiro login
+  /// Sempre normalizado (lowercase + trim) nas ações. Unique pra
+  /// garantir auto-linking determinístico com User.
+  email       String?  @unique
   phone       String?
   isAthlete   Boolean  @default(false)
   isSupporter Boolean  @default(true)
@@ -208,7 +210,9 @@ model Event {
   updatedAt              DateTime      @updatedAt
 
   modality    Modality       @relation(fields: [modalityId], references: [id], onDelete: Restrict)
-  location    Location?      @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  // Restrict (não SetNull): deletar Location com eventos é geralmente engano
+  // — força o admin a reatribuir o evento antes ou cancelá-lo.
+  location    Location?      @relation(fields: [locationId], references: [id], onDelete: Restrict)
   athletes    EventAthlete[]
   assignments Assignment[]
   checkIns    CheckIn[]

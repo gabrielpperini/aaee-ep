@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { LocationDialog } from "./location-dialog";
 import { deleteLocation } from "./actions";
 
@@ -25,29 +26,41 @@ type Props = {
 
 export function LocationRowActions({ location }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function handleDelete() {
-    if (!confirm(`Excluir "${location.name}"?`)) return;
-    startTransition(async () => {
-      const result = await deleteLocation(location.id);
-      if (result.status === "error") {
-        toast.error(result.formError ?? "Não foi possível excluir.");
-      } else if (result.status === "success") {
-        toast.success("Local excluído");
-      }
+  function runDelete() {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await deleteLocation(location.id);
+        if (result.status === "error") {
+          toast.error(result.formError ?? "Não foi possível excluir.");
+        } else if (result.status === "success") {
+          toast.success("Local excluído");
+        }
+        resolve();
+      });
     });
   }
 
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" disabled={pending} />}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pending}
+              aria-label={`Ações para ${location.name}`}
+            />
+          }
+        >
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>
-          <DropdownMenuItem onClick={handleDelete} variant="destructive">
+          <DropdownMenuItem onClick={() => setConfirmOpen(true)} variant="destructive">
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -62,6 +75,14 @@ export function LocationRowActions({ location }: Props) {
           description: location.description ?? "",
           notes: location.notes ?? "",
         }}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Excluir "${location.name}"?`}
+        description="Esta ação não pode ser desfeita. Eventos vinculados precisam ser reatribuídos antes."
+        confirmLabel="Excluir"
+        onConfirm={runDelete}
       />
     </>
   );

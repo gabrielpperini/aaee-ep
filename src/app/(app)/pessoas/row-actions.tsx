@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { PersonDialog } from "./person-dialog";
 import type { PersonFormValues } from "@/lib/validations/person";
 import { deletePerson } from "./actions";
@@ -33,17 +34,20 @@ type Props = {
 
 export function PersonRowActions({ person, modalities }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function handleDelete() {
-    if (!confirm(`Excluir "${person.name}"?`)) return;
-    startTransition(async () => {
-      const result = await deletePerson(person.id);
-      if (result.status === "error") {
-        toast.error(result.formError ?? "Não foi possível excluir.");
-      } else if (result.status === "success") {
-        toast.success("Pessoa excluída");
-      }
+  function runDelete() {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await deletePerson(person.id);
+        if (result.status === "error") {
+          toast.error(result.formError ?? "Não foi possível excluir.");
+        } else if (result.status === "success") {
+          toast.success("Pessoa excluída");
+        }
+        resolve();
+      });
     });
   }
 
@@ -64,12 +68,21 @@ export function PersonRowActions({ person, modalities }: Props) {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" disabled={pending} />}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pending}
+              aria-label={`Ações para ${person.name}`}
+            />
+          }
+        >
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>
-          <DropdownMenuItem onClick={handleDelete} variant="destructive">
+          <DropdownMenuItem onClick={() => setConfirmOpen(true)} variant="destructive">
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -79,6 +92,14 @@ export function PersonRowActions({ person, modalities }: Props) {
         onOpenChange={setEditOpen}
         modalities={modalities}
         initial={initial}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Excluir "${person.name}"?`}
+        description="Esta ação remove o cadastro permanentemente. Eventos e check-ins ficam órfãos."
+        confirmLabel="Excluir"
+        onConfirm={runDelete}
       />
     </>
   );

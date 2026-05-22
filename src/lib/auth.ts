@@ -58,8 +58,9 @@ export const getCurrentUser = cache(async () => {
           data: { userId: newUser.id },
         });
       } else if (candidates.length > 1) {
+        // PII fora do log: identificamos pelo authUserId, não pelo email.
         console.warn(
-          `[auth] Auto-link skipped: múltiplos Persons (${candidates.length}+) com email ${normalizedEmail}. Resolva manualmente.`,
+          `[auth] Auto-link skipped for authUserId=${authUser.id}: ${candidates.length}+ Person candidates. Resolva manualmente em /admin/usuarios.`,
         );
       }
     }

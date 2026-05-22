@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { MapsLink } from "@/components/app/maps-link";
-import { ASSIGNMENT_ROLE_LABELS, formatEventTime } from "@/lib/format";
+import { ASSIGNMENT_ROLE_LABELS, COMMITTED_STATUSES, formatEventTime } from "@/lib/format";
 import { EP_DAY_SHORT_LABEL, formatEpDayDate } from "@/lib/ep-edition";
 import { getEpEdition } from "@/lib/ep-edition-server";
 
@@ -57,7 +57,7 @@ export default async function MeuHorarioPage() {
           { athletes: { some: { personId } } },
           { assignments: { some: { personId } } },
         ],
-        status: { notIn: ["CANCELLED"] },
+        status: { in: COMMITTED_STATUSES },
       },
       orderBy: [{ day: "asc" }, { startTime: "asc" }],
       include: {

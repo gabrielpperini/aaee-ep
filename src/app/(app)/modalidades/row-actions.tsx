@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import type { ModalityFormValues } from "@/lib/validations/modality";
 import { ModalityDialog } from "./modality-dialog";
 import { deleteModality } from "./actions";
@@ -26,29 +27,41 @@ type Props = {
 
 export function ModalityRowActions({ modality }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  function handleDelete() {
-    if (!confirm(`Excluir modalidade "${modality.name}"?`)) return;
-    startTransition(async () => {
-      const result = await deleteModality(modality.id);
-      if (result.status === "error") {
-        toast.error(result.formError ?? "Não foi possível excluir.");
-      } else if (result.status === "success") {
-        toast.success("Modalidade excluída");
-      }
+  function runDelete() {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const result = await deleteModality(modality.id);
+        if (result.status === "error") {
+          toast.error(result.formError ?? "Não foi possível excluir.");
+        } else if (result.status === "success") {
+          toast.success("Modalidade excluída");
+        }
+        resolve();
+      });
     });
   }
 
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="ghost" size="icon" disabled={pending} />}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={pending}
+              aria-label={`Ações para ${modality.name}`}
+            />
+          }
+        >
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>
-          <DropdownMenuItem onClick={handleDelete} variant="destructive">
+          <DropdownMenuItem onClick={() => setConfirmOpen(true)} variant="destructive">
             Excluir
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -63,6 +76,14 @@ export function ModalityRowActions({ modality }: Props) {
           priority: modality.priority,
           notes: modality.notes ?? "",
         }}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Excluir modalidade "${modality.name}"?`}
+        description="Eventos vinculados precisam ser excluídos ou reatribuídos antes."
+        confirmLabel="Excluir"
+        onConfirm={runDelete}
       />
     </>
   );

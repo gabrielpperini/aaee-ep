@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -177,6 +178,7 @@ export function ModalityDialog({ open, onOpenChange, initial }: Props) {
                 Cancelar
               </Button>
               <Button type="submit" disabled={pending}>
+                {pending && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
                 {pending ? "Salvando…" : "Salvar"}
               </Button>
             </DialogFooter>

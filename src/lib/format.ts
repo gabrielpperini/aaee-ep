@@ -40,6 +40,16 @@ export const STATUS_LABELS: Record<EventStatus, string> = {
   POSTPONED: "Adiado",
 };
 
+/**
+ * Status que ainda contam como "compromisso" da pessoa — aparecem em
+ * "Meu horário" e geram conflito de alocação. POSTPONED entra aqui porque
+ * a remarcação pode voltar a cair no mesmo horário.
+ */
+export const COMMITTED_STATUSES: EventStatus[] = ["CONFIRMED", "POSTPONED"];
+
+/** Status considerados "ativos" para dashboard ("acontecendo agora", "livre agora"). */
+export const LIVE_STATUSES: EventStatus[] = ["CONFIRMED"];
+
 /** Status derivado pra exibição na UI, computado de status + tempos + isConditional. */
 export type DerivedEventStatus =
   | "CONFIRMED"

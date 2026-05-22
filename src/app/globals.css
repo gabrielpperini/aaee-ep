@@ -28,6 +28,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -80,6 +82,9 @@
   --accent: oklch(0.72 0.065 215);
   --accent-foreground: oklch(0.18 0.045 250);
   --destructive: oklch(0.577 0.245 27.325);
+  /* Verde de "ok / check-in confirmado" — okupando lugar do antigo emerald. */
+  --success: oklch(0.62 0.14 150);
+  --success-foreground: oklch(0.98 0.01 150);
   --border: oklch(0.87 0.013 225);
   --input: oklch(0.87 0.013 225);
   --ring: oklch(0.72 0.065 215);
@@ -122,6 +127,8 @@
   --accent: oklch(0.32 0.06 235);
   --accent-foreground: oklch(0.95 0.008 220);
   --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.74 0.13 150);
+  --success-foreground: oklch(0.14 0.04 252);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 13%);
   --ring: oklch(0.78 0.075 215);

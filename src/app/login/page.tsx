@@ -48,10 +48,20 @@ export default function LoginPage() {
   );
 }
 
+/**
+ * Aceita só paths internos. Bloqueia URLs absolutas (http://...) e
+ * protocol-relative (//evil.com) pra evitar open redirect via querystring.
+ */
+function safeRedirectPath(raw: string | null): string {
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return "/";
+  return raw;
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? "/";
+  const redirectTo = safeRedirectPath(searchParams.get("redirectTo"));
 
   const [mode, setMode] = useState<Mode>("password");
   const [sharedEmail, setSharedEmail] = useState("");

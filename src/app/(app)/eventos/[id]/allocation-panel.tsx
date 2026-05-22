@@ -58,6 +58,9 @@ export function AllocationPanel({ eventId, desiredSupportersCount, assignments, 
   });
 
   function add(personId: string) {
+    const person = available.find((p) => p.id === personId);
+    // Se a UI mostrou alerta de conflito, o usuário já viu — manda force.
+    const hasConflict = Boolean(person?.conflict);
     setBusyPerson(personId);
     startTransition(async () => {
       const result = await upsertAssignment({
@@ -66,6 +69,7 @@ export function AllocationPanel({ eventId, desiredSupportersCount, assignments, 
         role: "SUPPORTER",
         isCaptain: false,
         notes: "",
+        force: hasConflict,
       });
       setBusyPerson(null);
       if (!result.ok) toast.error(result.error);
@@ -164,13 +168,13 @@ export function AllocationPanel({ eventId, desiredSupportersCount, assignments, 
                     {p.competingElsewhere && (
                       <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-destructive">
                         <AlertTriangle className="h-3 w-3" />
-                        Competindo em "{p.competingElsewhere.title}"
+                        Competindo em &ldquo;{p.competingElsewhere.title}&rdquo;
                       </div>
                     )}
                     {p.conflict && (
                       <div className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-amber-700 dark:text-amber-400">
                         <AlertTriangle className="h-3 w-3" />
-                        Já alocada em "{p.conflict.title}"
+                        Já alocada em &ldquo;{p.conflict.title}&rdquo;
                       </div>
                     )}
                   </div>

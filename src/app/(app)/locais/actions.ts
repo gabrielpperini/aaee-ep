@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
+import { Prisma } from "@/generated/prisma/client";
 import {
   fieldErrorsFromZod,
   failure,
@@ -46,10 +47,21 @@ export async function saveLocation(
 
 export async function deleteLocation(id: string): Promise<FormState> {
   await requireRole(["DIRECTOR", "ADMIN"]);
+
+  const eventCount = await prisma.event.count({ where: { locationId: id } });
+  if (eventCount > 0) {
+    return failure(
+      `Este local tem ${eventCount} evento(s) vinculado(s). Reatribua ou cancele antes de excluir.`,
+    );
+  }
+
   try {
     await prisma.location.delete({ where: { id } });
-  } catch {
-    return failure("Não foi possível excluir (talvez existam eventos vinculados).");
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
+      return failure("Não foi possível excluir: há registros vinculados.");
+    }
+    throw e;
   }
   revalidatePath("/locais");
   return success();

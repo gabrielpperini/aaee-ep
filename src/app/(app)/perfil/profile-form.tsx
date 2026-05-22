@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -199,6 +200,7 @@ export function ProfileForm({ personId, modalities, initial }: Props) {
 
         <div className="flex justify-end pt-2">
           <Button type="submit" disabled={pending}>
+            {pending && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
             {pending ? "Salvando…" : "Salvar alterações"}
           </Button>
         </div>
