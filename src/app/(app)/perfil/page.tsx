@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { ProfileForm } from "./profile-form";
+import { InstallAppLink } from "@/components/app/install-app-link";
 import type { ProfileFormValues } from "@/lib/validations/profile";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -78,6 +79,7 @@ export default async function ProfilePage() {
                 Preencha os dados ao lado para criar seu cadastro.
               </p>
             )}
+            <InstallAppLink />
           </CardContent>
         </Card>
 

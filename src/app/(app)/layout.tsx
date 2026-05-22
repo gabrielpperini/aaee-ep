@@ -1,5 +1,7 @@
 import { Sidebar } from "@/components/app/sidebar";
 import { MobileNav } from "@/components/app/mobile-nav";
+import { ServiceWorkerRegister } from "@/components/app/service-worker-register";
+import { InstallPrompt } from "@/components/app/install-prompt";
 import { requireUser } from "@/lib/auth";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +19,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </main>
       </div>
+      <ServiceWorkerRegister />
+      <InstallPrompt />
     </div>
   );
 }
