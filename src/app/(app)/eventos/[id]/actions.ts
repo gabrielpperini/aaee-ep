@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser, requireRole } from "@/lib/auth";
 import { AssignmentRole, EventStatus } from "@/generated/prisma/client";
 import { COMMITTED_STATUSES } from "@/lib/format";
+import { nowDate } from "@/lib/time";
 
 export type ActionResult<TData = undefined> =
   | { ok: true; data?: TData }
@@ -135,7 +136,7 @@ export async function checkIn(eventId: string): Promise<ActionResult> {
     return { ok: false, error: `Evento ${label} — check-in indisponível.` };
   }
 
-  const now = Date.now();
+  const now = nowDate().getTime();
   if (now < event.startTime.getTime() - CHECKIN_OPEN_BEFORE_MS) {
     return { ok: false, error: "Check-in só libera 30 minutos antes do horário." };
   }

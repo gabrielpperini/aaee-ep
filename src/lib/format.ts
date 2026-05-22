@@ -8,6 +8,7 @@ import type {
   EventStatus,
   ModalityCategory,
 } from "@/generated/prisma/client";
+import { nowDate } from "./time";
 
 export function formatEventTime(start: Date, end: Date): string {
   return `${format(start, "HH:mm")} – ${format(end, "HH:mm")}`;
@@ -73,7 +74,7 @@ export function deriveEventStatus(event: {
   startTime: Date;
   endTime: Date;
   isConditional: boolean;
-}, now: Date = new Date()): DerivedEventStatus {
+}, now: Date = nowDate()): DerivedEventStatus {
   if (event.status === "CANCELLED" || event.status === "POSTPONED") {
     return event.status;
   }

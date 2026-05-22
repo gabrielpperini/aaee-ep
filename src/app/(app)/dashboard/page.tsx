@@ -12,6 +12,7 @@ import {
   priorityVariant,
   statusVariant,
 } from "@/lib/format";
+import { nowDate } from "@/lib/time";
 
 const SOON_HORIZON_MS = 3 * 60 * 60 * 1000; // 3 horas
 const PRIORITY_RANK: Record<string, number> = { CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 };
@@ -19,7 +20,7 @@ const PRIORITY_RANK: Record<string, number> = { CRITICAL: 0, HIGH: 1, NORMAL: 2,
 export default async function DashboardPage() {
   await requireRole(["DIRECTOR", "ADMIN"]);
 
-  const now = new Date();
+  const now = nowDate();
   const soonEnd = new Date(now.getTime() + SOON_HORIZON_MS);
 
   const [happeningNow, upcomingSoon, allActive, busyNow, competingNow, totalPeople] = await Promise.all([

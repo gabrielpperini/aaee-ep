@@ -33,6 +33,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!.env.test
 
 # vercel
 .vercel
@@ -49,3 +50,12 @@ next-env.d.ts
 # Screenshots de teste (incluindo Playwright)
 /screenshots/
 /*.png
+
+# Claude Code runtime (locks, scheduled tasks)
+.claude/scheduled_tasks.lock
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/tests/e2e/.auth/

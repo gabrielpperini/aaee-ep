@@ -21,6 +21,7 @@ import {
 } from "@/lib/format";
 import { EP_DAY_SHORT_LABEL, formatEpDayDate } from "@/lib/ep-edition";
 import { getEpEdition } from "@/lib/ep-edition-server";
+import { nowDate } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 export default async function HomePage() {
@@ -52,7 +53,7 @@ async function MemberHome({
   edition: Awaited<ReturnType<typeof getEpEdition>>;
   isManager: boolean;
 }) {
-  const now = new Date();
+  const now = nowDate();
 
   const [myAssignments, myAthleteEvents, openEvents, stats] = await Promise.all([
     prisma.event.findMany({
