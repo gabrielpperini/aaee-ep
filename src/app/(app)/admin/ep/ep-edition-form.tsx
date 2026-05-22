@@ -31,7 +31,6 @@ const FIELDS: Array<{
   name: keyof EpEditionFormValues;
   day: number;
 }> = [
-  { name: "dayMinus1", day: -1 },
   { name: "day0", day: 0 },
   { name: "day1", day: 1 },
   { name: "day2", day: 2 },

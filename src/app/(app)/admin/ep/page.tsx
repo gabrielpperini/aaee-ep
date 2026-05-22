@@ -18,7 +18,6 @@ export default async function EpEditionAdminPage() {
 
   const initial = {
     name: row?.name ?? "",
-    dayMinus1: dateToInput(row?.dayMinus1),
     day0: dateToInput(row?.day0),
     day1: dateToInput(row?.day1),
     day2: dateToInput(row?.day2),
@@ -32,7 +31,7 @@ export default async function EpEditionAdminPage() {
       <PageHeader
         eyebrow="Administração · EP"
         title="Edição do EP"
-        description="Defina as datas reais de cada dia da edição atual. O dia -1 é a ida (ônibus) e o dia 4 é a volta."
+        description="Defina as datas reais de cada dia da edição atual. O dia 0 é a ida (ônibus) e o dia 4 é a volta."
       />
       <Card>
         <CardContent className="pt-6">

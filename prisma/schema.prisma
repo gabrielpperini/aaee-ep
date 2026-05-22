@@ -158,14 +158,12 @@ model ModalityAthlete {
 
 /// Configuração da edição atual do EP. Singleton (sempre id="current").
 /// As datas mapeiam os "days" usados em Event:
-///  -1 = embarque / ida (ônibus pra cidade do EP)
-///   0 = véspera / chegada
+///   0 = ida / chegada (ônibus pra cidade do EP)
 ///   1, 2, 3 = dias principais de competição
 ///   4 = volta / desembarque
 model EpEdition {
   id          String   @id @default("current")
   name        String?  // ex: "EP 2026 — Pelotas"
-  dayMinus1   DateTime?
   day0        DateTime?
   day1        DateTime?
   day2        DateTime?
@@ -196,7 +194,7 @@ model Event {
   modalityId             String
   title                  String
   description            String?
-  day                    Int           // -1 (chegada), 0 (véspera), 1, 2, 3 (dias principais) ou 4 (volta)
+  day                    Int           // 0 (ida/chegada), 1, 2, 3 (dias principais) ou 4 (volta)
   startTime              DateTime
   endTime                DateTime
   locationId             String?

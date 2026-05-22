@@ -39,7 +39,6 @@ export async function saveEpEdition(
   const v = parsed.data;
   const data = {
     name: v.name?.trim() || null,
-    dayMinus1: toDateOrNull(v.dayMinus1),
     day0: toDateOrNull(v.day0),
     day1: toDateOrNull(v.day1),
     day2: toDateOrNull(v.day2),

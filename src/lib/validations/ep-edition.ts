@@ -12,7 +12,6 @@ const optionalDate = z
 
 export const epEditionSchema = z.object({
   name: optionalText(120),
-  dayMinus1: optionalDate,
   day0: optionalDate,
   day1: optionalDate,
   day2: optionalDate,

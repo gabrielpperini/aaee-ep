@@ -191,8 +191,7 @@ export function EventDialog({
                         className="flex flex-wrap gap-3"
                       >
                         {[
-                          { v: -1, label: "Ida" },
-                          { v: 0, label: "Véspera" },
+                          { v: 0, label: "Ida" },
                           { v: 1, label: "Dia 1" },
                           { v: 2, label: "Dia 2" },
                           { v: 3, label: "Dia 3" },

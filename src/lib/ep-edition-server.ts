@@ -6,7 +6,6 @@ export async function getEpEdition(): Promise<EpEditionDates> {
   return {
     name: row?.name ?? null,
     byDay: {
-      [-1]: row?.dayMinus1 ?? null,
       0: row?.day0 ?? null,
       1: row?.day1 ?? null,
       2: row?.day2 ?? null,
