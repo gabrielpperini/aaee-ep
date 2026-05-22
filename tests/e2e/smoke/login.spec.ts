@@ -34,5 +34,13 @@ test.describe("Login — fluxo por senha", () => {
 });
 
 test.describe("Auth — logout", () => {
-  test.skip("logout limpa sessão e redireciona pra login (TODO: confirmar gatilho na UI)", () => {});
+  test("clicar em 'Sair' limpa cookie e leva pra /login", async ({ asDirector }) => {
+    await asDirector.goto("/");
+    await asDirector.getByRole("button", { name: "Sair" }).click();
+
+    await asDirector.waitForURL(/\/login/);
+    // Tentar acessar rota protegida confirma que a sessão foi limpa.
+    await asDirector.goto("/dashboard");
+    await expect(asDirector).toHaveURL(/\/login\?redirectTo=%2Fdashboard/);
+  });
 });
