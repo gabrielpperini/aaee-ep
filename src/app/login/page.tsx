@@ -429,8 +429,8 @@ function OtpVerifyForm({
                 <Input
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  maxLength={6}
-                  placeholder="000000"
+                  maxLength={8}
+                  placeholder="00000000"
                   className="text-center text-2xl font-mono tracking-[0.5em]"
                   {...field}
                   onChange={(e) =>

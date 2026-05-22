@@ -25,9 +25,9 @@ export const otpVerifySchema = z.object({
   email,
   token: z
     .string()
-    .min(6, "Código OTP tem 6 dígitos")
-    .max(6, "Código OTP tem 6 dígitos")
-    .regex(/^\d{6}$/u, "Código OTP deve ser numérico"),
+    .min(8, "Código OTP tem 8 dígitos")
+    .max(8, "Código OTP tem 8 dígitos")
+    .regex(/^\d{8}$/u, "Código OTP deve ser numérico"),
 });
 export type OtpVerifyValues = z.infer<typeof otpVerifySchema>;
 
