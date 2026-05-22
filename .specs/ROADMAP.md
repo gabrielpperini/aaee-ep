@@ -95,36 +95,54 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 ---
 
-## MVP 3 — Offline-first e materiais
+## MVP 3 — Offline-first e notificações push
 
-**Objetivo:** Tornar o app utilizável durante o evento mesmo com internet ruim, e controlar os materiais individuais.
+**Objetivo:** Tornar o app utilizável durante o evento mesmo com internet ruim, e avisar a pessoa quando algo relevante muda (próximo evento, mudança de alocação, capitão chamando torcida).
 
 ### Entregas
 
-- [ ] CRUD de Materiais (individuais, com código único)
-  - Status: disponível, em uso, com responsável, em transporte, guardado, perdido, danificado
-  - Vinculação a evento + responsável atual
-  - Histórico de movimentação
-  - Validação: um material não pode estar em dois lugares ao mesmo tempo
 - [ ] PWA: manifest + service worker
 - [ ] IndexedDB com Dexie para cache local de:
   - Agenda completa dos 3 dias
   - Disponibilidade da própria pessoa
   - Alocações da própria pessoa
-  - Materiais sob responsabilidade da pessoa
 - [ ] Fila de `SyncOperation` para alterações offline
-  - Disponibilidade, check-in, movimentação de material, alocação
+  - Disponibilidade, check-in, alocação
 - [ ] Sincronização ao voltar online
 - [ ] Resolução de conflitos
   - Dados pessoais: última alteração da própria pessoa vence
   - Alocações conflitantes: alerta para diretores
-  - Materiais duplicados em locais diferentes: alerta
   - Check-ins: mantidos como histórico, sem sobrescrever
 - [ ] Indicador de "alterações pendentes" na UI
+- [ ] **Notificações push em todos os dispositivos possíveis (Web Push API + VAPID)**
+  - **Cobertura por plataforma:**
+    - Android: Chrome/Firefox/Edge/Samsung Internet — direto pelo navegador
+    - Desktop: Chrome/Firefox/Edge/Opera (Win/Mac/Linux) + Safari 16+ (macOS) — direto pelo navegador
+    - iOS/iPadOS 16.4+: **só funciona com o app instalado como PWA** (Add to Home Screen). Browser tab não recebe push no iOS — limitação da Apple.
+  - **Fluxo de instalação (sempre pós-login):**
+    - Modal `<InstallPrompt />` aparece **sempre depois do login**, independente de plataforma, instruindo a instalar como PWA
+    - Instruções condicionais por SO/navegador:
+      - Android Chrome/Edge: usa o evento `beforeinstallprompt` pra mostrar botão nativo "Instalar"
+      - iOS Safari: instruções visuais "Compartilhar → Adicionar à Tela de Início" (não há API nativa)
+      - Desktop Chrome/Edge: ícone de instalação na omnibox + botão no modal
+      - Demais navegadores: instruções genéricas
+    - Detecta se já está rodando standalone (`display-mode: standalone` ou `navigator.standalone`) e **não mostra o modal** nesse caso
+    - "Não mostrar de novo" guardado em `localStorage`; admin pode forçar reaparecer se quiser
+    - Só pede permissão de push **depois** que o app está instalado (no iOS é obrigatório; nos outros é boa prática pra garantir que a permissão persiste)
+  - **Subscription:**
+    - Endpoint pra registrar/atualizar `PushSubscription` por usuário+dispositivo (uma pessoa pode ter N dispositivos)
+    - Limpeza automática de subscriptions com erro 410 Gone
+  - **Permissão pedida no onboarding pós-login** com explicação curta do que será enviado; reaproveitar prompt em `/perfil` se foi recusada
+  - **Disparos automáticos:**
+    - Próximo evento da pessoa (T-30min, configurável)
+    - Mudança de alocação que envolve a pessoa (escalado/removido/promovido a capitão)
+    - Capitão envia push pra torcida do evento ("Chamado da torcida")
+  - **Preferências por usuário em `/perfil`:** liga/desliga categorias; vê dispositivos registrados e remove individualmente
+  - **Fallback gracioso:** se push falhar (sem permissão, subscription inválida, navegador sem suporte), nada quebra — a feature complementa, não substitui a UI in-app
 
 ### Entidades adicionadas
 
-`Material`, `SyncOperation`.
+`SyncOperation`, `PushSubscription`, `NotificationPreference`.
 
 ---
 
@@ -158,9 +176,9 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 ## Pós-MVP — Possíveis evoluções
 
 - Importação de tabela oficial do EP (CSV/Excel)
-- Notificações push para próximo evento / mudança de alocação
+- CRUD de Materiais (individuais, com código único, status, histórico de movimentação) — descopado do MVP 3
 - Geração de QR code por evento para check-in escaneado
-- Histórico/relatório pós-evento (presença, materiais)
+- Histórico/relatório pós-evento (presença)
 - Chat por evento ou por capitão
 - Integração com calendário externo (iCal)
 - Multi-edição (curso/atlética), se o app for adotado por outras delegações
