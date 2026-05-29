@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { BootSplash } from "@/components/app/boot-splash";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -78,6 +79,7 @@ export default function RootLayout({
       className={`${manrope.variable} ${bricolage.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground selection:bg-primary/20">
+        <BootSplash />
         <ThemeProvider>
           {children}
           <Toaster richColors closeButton position="top-right" />

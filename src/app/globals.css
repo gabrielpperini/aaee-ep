@@ -240,6 +240,44 @@
   .rise-delay-4 { animation-delay: 0.28s; }
   .rise-delay-5 { animation-delay: 0.36s; }
 
+  /* Shimmer para skeletons de carregamento */
+  @keyframes skeleton-shimmer {
+    100% { transform: translateX(100%); }
+  }
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklch, var(--foreground) 6%, transparent) 50%,
+      transparent 100%
+    );
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer::after { animation: none; }
+  }
+
+  /* Barra indeterminada (LoadingScreen) */
+  @keyframes loading-bar {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(360%); }
+  }
+  .loading-bar {
+    animation: loading-bar 1.1s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loading-bar { animation: none; width: 100%; }
+  }
+
   /* Stencil-style block numerals for day brackets */
   .stencil-number {
     font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
@@ -261,4 +299,70 @@
   /* Hide scrollbars but keep functionality */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
+}
+
+/*
+ * Boot splash — cobre o flash branco entre o splash do sistema (PWA) sumir e
+ * a app montar. Fica FORA de @layer e é SSR-renderizado, então pinta no
+ * primeiro frame, antes do JS hidratar. Navy = mesmo background_color do
+ * manifest, dando continuidade visual com o splash nativo.
+ */
+#boot-splash {
+  /* Só no PWA instalado: no navegador comum o flash de boot não incomoda e a
+     regra @media abaixo religa o display. */
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background-color: #0f1f33;
+  transition: opacity 0.4s ease;
+}
+@media (display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen) {
+  #boot-splash { display: flex; }
+}
+#boot-splash[data-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+#boot-splash .boot-splash__mark {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  animation: boot-splash-breathe 2s ease-in-out infinite;
+}
+#boot-splash .boot-splash__bar {
+  position: relative;
+  width: 120px;
+  height: 3px;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+#boot-splash .boot-splash__bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: 999px;
+  background-color: #7fd4e0;
+  animation: boot-splash-slide 1.1s ease-in-out infinite;
+}
+@keyframes boot-splash-breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.78; transform: scale(0.96); }
+}
+@keyframes boot-splash-slide {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(370%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #boot-splash .boot-splash__mark { animation: none; }
+  #boot-splash .boot-splash__bar::after {
+    width: 100%;
+    animation: none;
+  }
 }
