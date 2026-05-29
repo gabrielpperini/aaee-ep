@@ -14,6 +14,7 @@ import {
   type SetupAccountValues,
 } from "@/lib/validations/auth";
 import { phoneDigits } from "@/lib/validations/_primitives";
+import { resolveLinkablePerson } from "@/lib/auth-link";
 
 /**
  * Após `supabase.auth.signUp` no cliente devolver uma sessão (cookies já setados),
@@ -64,30 +65,30 @@ export async function setupNewAccount(
       });
     }
 
-    if (normalizedEmail) {
-      const candidates = await tx.person.findMany({
-        where: {
-          userId: null,
-          email: { equals: normalizedEmail, mode: "insensitive" },
-        },
-        take: 2,
-      });
+    // Auto-link por email ou telefone — pega quem foi importado da planilha
+    // (que tem telefone mas não email) além de quem casa por email.
+    const match = await resolveLinkablePerson(tx, {
+      email: normalizedEmail,
+      phone: phoneNum,
+      authUserId: authUser.id,
+    });
 
-      if (candidates.length === 1) {
-        const target = candidates[0];
-        await tx.person.update({
-          where: { id: target.id },
-          data: {
-            userId: user.id,
-            name: target.name || personData.name,
-            nickname: target.nickname ?? personData.nickname,
-            phone: target.phone ?? personData.phone,
-            course: target.course ?? personData.course,
-            semester: target.semester ?? personData.semester,
-          },
-        });
-        return;
-      }
+    if (match) {
+      const target = await tx.person.findUniqueOrThrow({ where: { id: match.id } });
+      await tx.person.update({
+        where: { id: target.id },
+        data: {
+          userId: user.id,
+          name: target.name || personData.name,
+          nickname: target.nickname ?? personData.nickname,
+          phone: target.phone ?? personData.phone,
+          course: target.course ?? personData.course,
+          semester: target.semester ?? personData.semester,
+          // Preenche o email se a pessoa importada ainda não tinha.
+          email: target.email ?? normalizedEmail,
+        },
+      });
+      return;
     }
 
     const existing = await tx.person.findUnique({ where: { userId: user.id } });

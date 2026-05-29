@@ -2,6 +2,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { resolveLinkablePerson } from "@/lib/auth-link";
 import type { Role } from "@/generated/prisma/client";
 
 /**
@@ -42,27 +43,23 @@ export const getCurrentUser = cache(async () => {
       },
     });
 
-    if (normalizedEmail) {
-      const candidates = await tx.person.findMany({
-        where: {
-          userId: null,
-          email: { equals: normalizedEmail, mode: "insensitive" },
-        },
-        select: { id: true },
-        take: 2,
-      });
+    // Auto-link por email ou telefone (pessoas importadas só têm telefone).
+    const match = await resolveLinkablePerson(tx, {
+      email: normalizedEmail,
+      phone: authUser.phone,
+      authUserId: authUser.id,
+    });
 
-      if (candidates.length === 1) {
-        await tx.person.update({
-          where: { id: candidates[0].id },
-          data: { userId: newUser.id },
-        });
-      } else if (candidates.length > 1) {
-        // PII fora do log: identificamos pelo authUserId, não pelo email.
-        console.warn(
-          `[auth] Auto-link skipped for authUserId=${authUser.id}: ${candidates.length}+ Person candidates. Resolva manualmente em /admin/usuarios.`,
-        );
-      }
+    if (match) {
+      await tx.person.update({
+        where: { id: match.id },
+        data: {
+          userId: newUser.id,
+          // Preenche o email da pessoa quando ela ainda não tem (caso típico
+          // de quem foi importado por telefone) — destrava o link por email depois.
+          ...(!match.email && normalizedEmail ? { email: normalizedEmail } : {}),
+        },
+      });
     }
 
     return tx.user.findUniqueOrThrow({
