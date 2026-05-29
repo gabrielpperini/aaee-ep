@@ -10,6 +10,8 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { ProfileForm } from "./profile-form";
+import { NotificationSettings } from "./notification-settings";
+import { SyncPanel } from "./sync-panel";
 import { InstallAppLink } from "@/components/app/install-app-link";
 import type { ProfileFormValues } from "@/lib/validations/profile";
 
@@ -35,6 +37,21 @@ export default async function ProfilePage() {
         })
       ).map((ma) => ma.modalityId)
     : [];
+
+  const [notificationPreference, pushDevices] = await Promise.all([
+    prisma.notificationPreference.findUnique({ where: { userId: user.id } }),
+    prisma.pushSubscription.findMany({
+      where: { userId: user.id },
+      orderBy: { lastSeenAt: "desc" },
+      select: { id: true, endpoint: true, userAgent: true, lastSeenAt: true },
+    }),
+  ]);
+
+  const prefs = {
+    allocation: notificationPreference?.allocation ?? true,
+    eventReminder: notificationPreference?.eventReminder ?? true,
+    captainCall: notificationPreference?.captainCall ?? true,
+  };
 
   const initial: ProfileFormValues = {
     name: user.person?.name ?? "",
@@ -98,6 +115,22 @@ export default async function ProfilePage() {
             />
           </CardContent>
         </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Notificações</CardTitle>
+            <CardDescription>
+              Escolha o que receber e gerencie os dispositivos registrados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <NotificationSettings initialPrefs={prefs} devices={pushDevices} />
+          </CardContent>
+        </Card>
+
+        <div className="md:col-span-2">
+          <SyncPanel />
+        </div>
       </div>
     </div>
   );

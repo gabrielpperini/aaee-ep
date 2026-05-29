@@ -9,6 +9,7 @@ import { signOut } from "@/app/auth/actions";
 import { BrandMark } from "@/components/brand-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NAV_ITEMS, hasAccess, roleLabel, type NavItem } from "@/components/app/nav-items";
+import { PendingSyncBadge } from "@/components/app/pending-sync-badge";
 import type { Role } from "@/generated/prisma/client";
 
 const GROUP_LABELS: Record<NavItem["group"], string> = {
@@ -146,6 +147,7 @@ function SidebarFooter({ name, role }: { name: string; role: Role }) {
           </p>
         </div>
       </div>
+      <PendingSyncBadge className="mx-2 w-fit" />
       <ThemeToggle className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
       <form action={signOut}>
         <Button

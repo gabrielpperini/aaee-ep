@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { MODALITY_CATEGORY_LABELS, PRIORITY_LABELS, priorityVariant } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
+import { OfflineUnsupportedNotice } from "@/components/app/offline-unsupported-notice";
 import { EmptyState } from "@/components/app/empty-state";
 import { NewModalityButton } from "./new-modality-button";
 import { ModalityRowActions } from "./row-actions";
@@ -32,6 +33,7 @@ export default async function ModalitiesPage() {
         description="Esportes, atividades culturais e da torcida."
         actions={<NewModalityButton />}
       />
+      <OfflineUnsupportedNotice />
 
       {modalities.length === 0 ? (
         <EmptyState

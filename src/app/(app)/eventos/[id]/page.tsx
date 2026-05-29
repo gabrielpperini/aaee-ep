@@ -21,6 +21,7 @@ import { MapsLink } from "@/components/app/maps-link";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { AllocationPanel } from "./allocation-panel";
 import { CheckInButton } from "./checkin-button";
+import { CallSupportersButton } from "./call-supporters-button";
 import { EventStatusActions } from "./event-status-actions";
 
 function eventGreeting(
@@ -198,9 +199,15 @@ export default async function EventDetailPage({
             )}
             <CheckInButton
               eventId={event.id}
+              personId={user.person?.id ?? null}
               checkedAt={myCheckIn?.checkedAt ?? null}
               disabled={!user.person}
             />
+            {(myAssignment?.isCaptain || isManager) && (
+              <div className="border-t pt-3">
+                <CallSupportersButton eventId={event.id} />
+              </div>
+            )}
           </CardContent>
         </Card>
 

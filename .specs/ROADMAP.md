@@ -114,7 +114,7 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
   - Alocações conflitantes: alerta para diretores
   - Check-ins: mantidos como histórico, sem sobrescrever
 - [ ] Indicador de "alterações pendentes" na UI
-- [ ] **Notificações push em todos os dispositivos possíveis (Web Push API + VAPID)**
+- [x] **Notificações push em todos os dispositivos possíveis (Web Push API + VAPID)** — Bloco B completo
   - **Cobertura por plataforma:**
     - Android: Chrome/Firefox/Edge/Samsung Internet — direto pelo navegador
     - Desktop: Chrome/Firefox/Edge/Opera (Win/Mac/Linux) + Safari 16+ (macOS) — direto pelo navegador

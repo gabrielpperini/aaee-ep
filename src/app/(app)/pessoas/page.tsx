@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { COMMITTED_STATUSES } from "@/lib/format";
 import { PageHeader } from "@/components/app/page-header";
+import { OfflineUnsupportedNotice } from "@/components/app/offline-unsupported-notice";
 import { EmptyState } from "@/components/app/empty-state";
 import { NewPersonButton } from "./new-person-button";
 import { PeopleTable, type PersonRow } from "./people-table";
@@ -68,6 +69,7 @@ export default async function PeoplePage() {
         description="Membros da delegação: atletas, torcida, apoio e diretoria."
         actions={<NewPersonButton modalities={modalities} />}
       />
+      <OfflineUnsupportedNotice />
 
       {rows.length === 0 ? (
         <EmptyState

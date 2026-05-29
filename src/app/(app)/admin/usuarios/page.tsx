@@ -2,6 +2,7 @@ import { EmptyState } from "@/components/app/empty-state";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
+import { OfflineUnsupportedNotice } from "@/components/app/offline-unsupported-notice";
 import { UsersTable } from "./users-table";
 
 export default async function AdminUsersPage() {
@@ -36,6 +37,7 @@ export default async function AdminUsersPage() {
         title="Usuários"
         description="Contas que já entraram no app. Gerencie funções e vínculo com pessoas da delegação."
       />
+      <OfflineUnsupportedNotice />
 
       {users.length === 0 ? (
         <EmptyState

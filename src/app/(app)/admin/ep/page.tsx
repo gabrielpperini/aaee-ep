@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
+import { OfflineUnsupportedNotice } from "@/components/app/offline-unsupported-notice";
 import { Card, CardContent } from "@/components/ui/card";
 import { EP_EDITION_ID } from "@/lib/ep-edition";
 import { EpEditionForm } from "./ep-edition-form";
@@ -33,6 +34,7 @@ export default async function EpEditionAdminPage() {
         title="Edição do EP"
         description="Defina as datas reais de cada dia da edição atual. O dia 0 é a ida (ônibus) e o dia 4 é a volta."
       />
+      <OfflineUnsupportedNotice />
       <Card>
         <CardContent className="pt-6">
           <EpEditionForm initial={initial} />

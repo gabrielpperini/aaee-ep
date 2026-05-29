@@ -5,9 +5,9 @@
 // - Navegação (HTML) → network-first, fallback pra última página cacheada → fallback /offline
 // - Outras requisições (API, server actions, third-party) → não interceptamos, vai direto pra rede
 //
-// Push e notificationclick entram em B1. Por ora só base de cache/offline.
+// Push e notificationclick: ver fim do arquivo (MVP 3 / B1).
 
-const VERSION = "v1";
+const VERSION = "v3";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGES_CACHE = `pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -115,4 +115,72 @@ self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") {
     self.skipWaiting();
   }
+});
+
+// ============================================================
+// Background Sync (MVP 3 / C3)
+// ============================================================
+// O processamento da fila roda no client (precisa chamar server actions), então
+// o SW só nudge os clients abertos quando o navegador dispara o sync.
+
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-queue") {
+    event.waitUntil(
+      self.clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((clients) => {
+          for (const client of clients) {
+            client.postMessage({ type: "sync-queue" });
+          }
+        }),
+    );
+  }
+});
+
+// ============================================================
+// Push (MVP 3 / B1)
+// ============================================================
+// Payload esperado (JSON): { title, body, url?, tag? }
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    // payload não-JSON — usa texto cru como body
+    payload = { body: event.data ? event.data.text() : "" };
+  }
+
+  const title = payload.title || "AAEE Engenharia";
+  const options = {
+    body: payload.body || "",
+    tag: payload.tag,
+    icon: "/icon.png",
+    badge: "/icon.png",
+    data: { url: payload.url || "/" },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/";
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // Foca uma aba já aberta na mesma origin; senão abre nova.
+        for (const client of clientList) {
+          const url = new URL(client.url);
+          if (url.origin === self.location.origin && "focus" in client) {
+            client.focus();
+            if ("navigate" in client) client.navigate(targetUrl);
+            return;
+          }
+        }
+        return self.clients.openWindow(targetUrl);
+      }),
+  );
 });

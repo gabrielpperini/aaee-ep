@@ -11,6 +11,7 @@ import { signOut } from "@/app/auth/actions";
 import { BrandMark } from "@/components/brand-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NAV_ITEMS, hasAccess, roleLabel, type NavItem } from "@/components/app/nav-items";
+import { PendingSyncBadge } from "@/components/app/pending-sync-badge";
 import type { Role } from "@/generated/prisma/client";
 
 const GROUP_LABELS: Record<NavItem["group"], string> = {
@@ -49,7 +50,8 @@ export function MobileNav({ role, name }: { role: Role; name: string }) {
           </div>
         </Link>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <PendingSyncBadge />
           <ThemeToggle className="hidden sm:inline-flex" />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger

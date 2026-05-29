@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
+import { OfflineUnsupportedNotice } from "@/components/app/offline-unsupported-notice";
 import { MapsLink } from "@/components/app/maps-link";
 import { EmptyState } from "@/components/app/empty-state";
 
@@ -26,6 +27,7 @@ export default async function MapaPage() {
         title="Mapa do EP"
         description="Locais dos eventos da delegação. Clique pra abrir no Google Maps."
       />
+      <OfflineUnsupportedNotice />
 
       {locations.length === 0 && orphans.length === 0 ? (
         <EmptyState

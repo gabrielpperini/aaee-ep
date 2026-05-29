@@ -10,6 +10,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
+import { OfflineUnsupportedNotice } from "@/components/app/offline-unsupported-notice";
 import { EmptyState } from "@/components/app/empty-state";
 import { MapsLink } from "@/components/app/maps-link";
 import { NewLocationButton } from "./new-location-button";
@@ -31,6 +32,7 @@ export default async function LocationsPage() {
         description="Locais físicos onde acontecem os eventos do EP."
         actions={<NewLocationButton />}
       />
+      <OfflineUnsupportedNotice />
 
       {locations.length === 0 ? (
         <EmptyState

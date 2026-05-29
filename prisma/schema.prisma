@@ -95,7 +95,10 @@ model User {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  person Person?
+  person                 Person?
+  pushSubscriptions      PushSubscription[]
+  notificationPreference NotificationPreference?
+  syncOperations         SyncOperation[]
 
   @@index([authUserId])
 }
@@ -204,6 +207,8 @@ model Event {
   status                 EventStatus   @default(CONFIRMED)
   isConditional          Boolean       @default(false)
   desiredSupportersCount Int           @default(0)
+  /// Último "chamado da torcida" disparado por capitão (throttle B6).
+  lastSupporterCallAt    DateTime?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
@@ -246,6 +251,8 @@ model Assignment {
   role      AssignmentRole @default(SUPPORTER)
   isCaptain Boolean        @default(false)
   notes     String?
+  /// Marca quando o lembrete T-30min já foi enviado (idempotência do cron B5).
+  reminderSentAt DateTime?
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
@@ -273,9 +280,53 @@ model CheckIn {
 }
 
 // ============================================================
-// Fases futuras (esqueleto)
+// MVP 3 — Bloco B: Notificações push
 // ============================================================
-// MVP 3 — Material, SyncOperation
-//
-// Modelos comentados intencionalmente para não inflar a migration.
-// Serão adicionados quando começar a fase correspondente.
+
+/// Inscrição de push de um dispositivo (Web Push API). Uma pessoa pode ter N
+/// dispositivos; `endpoint` é único globalmente (re-subscrição faz upsert).
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Preferências de notificação por usuário (1:1). Default tudo ligado.
+model NotificationPreference {
+  userId        String  @id
+  allocation    Boolean @default(true)
+  eventReminder Boolean @default(true)
+  captainCall   Boolean @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// MVP 3 — Bloco C: Offline-first
+// ============================================================
+
+/// Auditoria das operações sincronizadas pela fila offline. A fila operacional
+/// vive no client (Dexie `pendingOps`); aqui registramos o resultado do
+/// processamento — em especial conflitos, pra diretoria ter visibilidade.
+model SyncOperation {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String // "checkIn" | "undoCheckIn"
+  payload   Json
+  status    String   @default("pending") // "pending" | "done" | "conflict" | "failed"
+  error     String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+}
