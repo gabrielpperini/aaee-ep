@@ -17,6 +17,7 @@ export const personSchema = z.object({
   isSupporter: z.boolean(),
   isDirector: z.boolean(),
   isSupport: z.boolean(),
+  isBateria: z.boolean(),
   notes: optionalText(500),
   modalityIds: idList,
 });

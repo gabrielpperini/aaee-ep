@@ -57,6 +57,7 @@ export default async function PeoplePage() {
     isSupporter: p.isSupporter,
     isDirector: p.isDirector,
     isSupport: p.isSupport,
+    isBateria: p.isBateria,
     notes: p.notes,
     modalities: p.modalityAthlete.map((ma) => ({ id: ma.modality.id, name: ma.modality.name })),
   }));

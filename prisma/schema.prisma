@@ -118,6 +118,7 @@ model Person {
   isSupporter Boolean  @default(true)
   isDirector  Boolean  @default(false)
   isSupport   Boolean  @default(false) // membro de apoio
+  isBateria   Boolean  @default(false) // integrante da bateria (percussão da torcida)
   course      Course?
   semester    Int?     // 1..10
   notes       String?

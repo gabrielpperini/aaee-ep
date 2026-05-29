@@ -26,6 +26,7 @@ type Props = {
     isSupporter: boolean;
     isDirector: boolean;
     isSupport: boolean;
+    isBateria: boolean;
     notes: string | null;
     modalityIds: string[];
   };
@@ -61,6 +62,7 @@ export function PersonRowActions({ person, modalities }: Props) {
     isSupporter: person.isSupporter,
     isDirector: person.isDirector,
     isSupport: person.isSupport,
+    isBateria: person.isBateria,
     notes: person.notes ?? "",
     modalityIds: person.modalityIds,
   };

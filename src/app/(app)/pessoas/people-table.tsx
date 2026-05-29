@@ -27,6 +27,7 @@ export type PersonRow = {
   isSupporter: boolean;
   isDirector: boolean;
   isSupport: boolean;
+  isBateria: boolean;
   notes: string | null;
   modalities: ModalityRef[];
 };
@@ -92,6 +93,7 @@ export function PeopleTable({ people, modalities, busyPersonIds }: Props) {
                   p.isSupporter && "Torcida",
                   p.isDirector && "Diretor",
                   p.isSupport && "Apoio",
+                  p.isBateria && "Bateria",
                 ].filter(Boolean) as string[];
                 const isBusy = busySet.has(p.id);
                 return (
@@ -152,6 +154,7 @@ export function PeopleTable({ people, modalities, busyPersonIds }: Props) {
                           isSupporter: p.isSupporter,
                           isDirector: p.isDirector,
                           isSupport: p.isSupport,
+                          isBateria: p.isBateria,
                           notes: p.notes,
                           modalityIds: p.modalities.map((m) => m.id),
                         }}

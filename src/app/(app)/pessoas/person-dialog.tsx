@@ -46,6 +46,7 @@ const FLAG_FIELDS = [
   { name: "isSupporter" as const, label: "Torcida" },
   { name: "isDirector" as const, label: "Diretor(a)" },
   { name: "isSupport" as const, label: "Apoio" },
+  { name: "isBateria" as const, label: "Bateria" },
 ];
 
 const empty: PersonFormValues = {
@@ -57,6 +58,7 @@ const empty: PersonFormValues = {
   isSupporter: true,
   isDirector: false,
   isSupport: false,
+  isBateria: false,
   notes: "",
   modalityIds: [],
 };
