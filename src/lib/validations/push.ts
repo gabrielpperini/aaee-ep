@@ -19,6 +19,8 @@ export const notificationPreferenceSchema = z.object({
   allocation: z.boolean(),
   eventReminder: z.boolean(),
   captainCall: z.boolean(),
+  /** Conflito de escalação na sincronização (só relevante pra diretoria). */
+  syncConflict: z.boolean(),
 });
 
 export type NotificationPreferenceInput = z.infer<

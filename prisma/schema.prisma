@@ -317,6 +317,8 @@ model NotificationPreference {
   allocation    Boolean @default(true)
   eventReminder Boolean @default(true)
   captainCall   Boolean @default(true)
+  /// Conflito de escalação detectado na sincronização offline (só diretoria).
+  syncConflict  Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -331,7 +333,7 @@ model NotificationPreference {
 model SyncOperation {
   id        String   @id @default(cuid())
   userId    String
-  kind      String // "checkIn" | "undoCheckIn"
+  kind      String // "checkIn" | "undoCheckIn" | "allocate" | "deallocate"
   payload   Json
   status    String   @default("pending") // "pending" | "done" | "conflict" | "failed"
   error     String?

@@ -7,7 +7,11 @@ import { prisma } from "@/lib/prisma";
  * Categorias de notificação. Mapeiam 1:1 com os campos de
  * `NotificationPreference` — usado pra respeitar o opt-out do usuário.
  */
-export type PushCategory = "allocation" | "eventReminder" | "captainCall";
+export type PushCategory =
+  | "allocation"
+  | "eventReminder"
+  | "captainCall"
+  | "syncConflict";
 
 export type PushPayload = {
   title: string;

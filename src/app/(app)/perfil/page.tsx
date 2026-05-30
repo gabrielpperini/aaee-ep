@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
+import { requireUser, canManage } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { ProfileForm } from "./profile-form";
 import { NotificationSettings } from "./notification-settings";
@@ -51,6 +51,7 @@ export default async function ProfilePage() {
     allocation: notificationPreference?.allocation ?? true,
     eventReminder: notificationPreference?.eventReminder ?? true,
     captainCall: notificationPreference?.captainCall ?? true,
+    syncConflict: notificationPreference?.syncConflict ?? true,
   };
 
   const initial: ProfileFormValues = {
@@ -124,7 +125,11 @@ export default async function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <NotificationSettings initialPrefs={prefs} devices={pushDevices} />
+            <NotificationSettings
+              initialPrefs={prefs}
+              devices={pushDevices}
+              canManage={canManage(user.role)}
+            />
           </CardContent>
         </Card>
 

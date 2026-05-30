@@ -21,6 +21,7 @@ type Prefs = {
   allocation: boolean;
   eventReminder: boolean;
   captainCall: boolean;
+  syncConflict: boolean;
 };
 
 type Device = {
@@ -36,12 +37,19 @@ const CATEGORY_LABELS: { key: keyof Prefs; label: string; hint: string }[] = [
   { key: "captainCall", label: "Chamado da torcida", hint: "Quando um capitão convoca a torcida." },
 ];
 
+// Categorias só relevantes pra diretoria — escondidas de quem não gerencia.
+const MANAGER_CATEGORY_LABELS: { key: keyof Prefs; label: string; hint: string }[] = [
+  { key: "syncConflict", label: "Conflitos de escalação", hint: "Quando uma escalação feita offline conflita ao sincronizar." },
+];
+
 export function NotificationSettings({
   initialPrefs,
   devices,
+  canManage = false,
 }: {
   initialPrefs: Prefs;
   devices: Device[];
+  canManage?: boolean;
 }) {
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs);
   const [deviceList, setDeviceList] = useState<Device[]>(devices);
@@ -139,7 +147,10 @@ export function NotificationSettings({
       )}
 
       <div className="space-y-3">
-        {CATEGORY_LABELS.map(({ key, label, hint }) => (
+        {[
+          ...CATEGORY_LABELS,
+          ...(canManage ? MANAGER_CATEGORY_LABELS : []),
+        ].map(({ key, label, hint }) => (
           <div key={key} className="flex items-start justify-between gap-3">
             <div>
               <div className="text-sm font-medium">{label}</div>
