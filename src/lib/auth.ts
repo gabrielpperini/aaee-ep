@@ -33,12 +33,14 @@ export const getCurrentUser = cache(async () => {
   if (existing) return existing;
 
   const normalizedEmail = authUser.email?.trim().toLowerCase() ?? null;
-  // Dados que o Supabase traz (ex: login Google preenche name no metadata).
+  // Dados que vieram do cadastro (salvos no metadata do signUp: name/nickname/phone).
   const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
   const metaName =
     (typeof meta.name === "string" && meta.name.trim()) ||
     (typeof meta.full_name === "string" && meta.full_name.trim()) ||
     null;
+  const metaNickname =
+    (typeof meta.nickname === "string" && meta.nickname.trim()) || null;
   const metaPhoneRaw =
     authUser.phone ||
     (typeof meta.phone === "string" ? meta.phone : "") ||
@@ -54,7 +56,7 @@ export const getCurrentUser = cache(async () => {
       },
     });
 
-    // Auto-link por email, telefone ou nome (Google traz nome, importados têm telefone).
+    // Auto-link por email, telefone ou nome (importados têm telefone, não email).
     const match = await resolveLinkablePerson(tx, {
       email: normalizedEmail,
       phone: phoneDigits,
@@ -63,22 +65,25 @@ export const getCurrentUser = cache(async () => {
     });
 
     if (match) {
+      // Ao vincular, os dados do cadastro prevalecem; campo sem valor no
+      // cadastro mantém o que veio da planilha (importado).
       await tx.person.update({
         where: { id: match.id },
         data: {
           userId: newUser.id,
-          // Preenche o email da pessoa quando ela ainda não tem (caso típico
-          // de quem foi importado por telefone) — destrava o link por email depois.
+          ...(metaName ? { name: metaName } : {}),
+          ...(metaNickname ? { nickname: metaNickname } : {}),
+          ...(phoneDigits ? { phone: phoneDigits } : {}),
           ...(!match.email && normalizedEmail ? { email: normalizedEmail } : {}),
         },
       });
     } else {
-      // Sem vínculo → cria a Person com o que o Supabase tem (nome/email/telefone),
-      // pra a conta sempre ter um nome visível.
+      // Sem vínculo → cria a Person com o que o cadastro/Supabase tem.
       await tx.person.create({
         data: {
           userId: newUser.id,
           name: metaName || normalizedEmail || "Membro",
+          nickname: metaNickname,
           email: normalizedEmail,
           phone: phoneDigits,
         },
