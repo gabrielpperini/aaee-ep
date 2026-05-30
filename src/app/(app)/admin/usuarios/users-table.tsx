@@ -31,18 +31,36 @@ const ROLE_VARIANT: Record<Role, "default" | "secondary" | "outline"> = {
   ADMIN: "default",
 };
 
+const PARTICIPATION: { key: keyof PersonData; label: string }[] = [
+  { key: "isAthlete", label: "Atleta" },
+  { key: "isSupporter", label: "Torcida" },
+  { key: "isDirector", label: "Diretor" },
+  { key: "isSupport", label: "Apoio" },
+  { key: "isBateria", label: "Bateria" },
+];
+
+type PersonData = {
+  id: string;
+  name: string;
+  nickname: string | null;
+  email: string | null;
+  phone: string | null;
+  course: Course | null;
+  semester: number | null;
+  isAthlete: boolean;
+  isSupporter: boolean;
+  isDirector: boolean;
+  isSupport: boolean;
+  isBateria: boolean;
+  modalities: { id: string; name: string }[];
+};
+
 export type UserRow = {
   id: string;
   email: string | null;
   phone: string | null;
   role: Role;
-  person: {
-    id: string;
-    name: string;
-    nickname: string | null;
-    course: Course | null;
-    semester: number | null;
-  } | null;
+  person: PersonData | null;
 };
 
 export type UnlinkedPerson = {
@@ -71,6 +89,9 @@ export function UsersTable({
         u.phone ?? "",
         u.person?.name ?? "",
         u.person?.nickname ?? "",
+        u.person?.email ?? "",
+        u.person?.phone ?? "",
+        u.person?.modalities.map((m) => m.name).join(" ") ?? "",
       ]
         .join(" ")
         .toLowerCase();
@@ -91,66 +112,100 @@ export function UsersTable({
         />
       </div>
 
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-x-auto p-0">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Nome / Apelido</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Telefone</TableHead>
-              <TableHead>Função</TableHead>
-              <TableHead>Pessoa vinculada</TableHead>
               <TableHead>Curso / Sem.</TableHead>
+              <TableHead>Participação</TableHead>
+              <TableHead>Modalidades</TableHead>
+              <TableHead>Função</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
                   Nenhum usuário encontrado.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">
-                    {u.email ?? <span className="text-muted-foreground">—</span>}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground tabular-nums">
-                    <div className="flex items-center gap-1.5">
-                      <span>{u.phone || "—"}</span>
-                      {u.phone && <WhatsAppButton phone={u.phone} size="icon-xs" />}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={ROLE_VARIANT[u.role]}>{ROLE_LABEL[u.role]}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    {u.person ? (
-                      <Link href="/pessoas" className="text-sm hover:underline">
-                        {u.person.name}
-                        {u.person.nickname && (
-                          <span className="text-muted-foreground"> ({u.person.nickname})</span>
+              filtered.map((u) => {
+                const tags = u.person
+                  ? PARTICIPATION.filter((p) => u.person![p.key]).map((p) => p.label)
+                  : [];
+                const phone = u.person?.phone || u.phone;
+                return (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">
+                      {u.person ? (
+                        <Link href="/pessoas" className="hover:underline">
+                          {u.person.name}
+                          {u.person.nickname && (
+                            <span className="text-muted-foreground"> ({u.person.nickname})</span>
+                          )}
+                        </Link>
+                      ) : (
+                        <span className="text-muted-foreground">— sem pessoa —</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {u.person?.email || u.email || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      <div className="flex items-center gap-1.5">
+                        <span>{phone || "—"}</span>
+                        {phone && <WhatsAppButton phone={phone} size="icon-xs" />}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                      {u.person?.course ? COURSE_LABELS[u.person.course] : "—"}
+                      {u.person?.semester && (
+                        <span className="text-muted-foreground/70"> · {u.person.semester}º</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {tags.length === 0 ? (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        ) : (
+                          tags.map((t) => (
+                            <Badge key={t} variant="secondary" className="text-[10px]">
+                              {t}
+                            </Badge>
+                          ))
                         )}
-                      </Link>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {u.person?.course ? COURSE_LABELS[u.person.course] : "—"}
-                    {u.person?.semester && (
-                      <span className="text-muted-foreground/70"> · {u.person.semester}º sem</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <UserRowActions
-                      user={{ id: u.id, email: u.email, role: u.role, person: u.person }}
-                      unlinkedPersons={unlinkedPersons}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {!u.person || u.person.modalities.length === 0 ? (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        ) : (
+                          u.person.modalities.map((m) => (
+                            <Badge key={m.id} variant="outline" className="text-[10px]">
+                              {m.name}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={ROLE_VARIANT[u.role]}>{ROLE_LABEL[u.role]}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <UserRowActions
+                        user={{ id: u.id, email: u.email, role: u.role, person: u.person }}
+                        unlinkedPersons={unlinkedPersons}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

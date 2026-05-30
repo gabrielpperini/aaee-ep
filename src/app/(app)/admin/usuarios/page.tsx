@@ -17,8 +17,18 @@ export default async function AdminUsersPage() {
             id: true,
             name: true,
             nickname: true,
+            email: true,
+            phone: true,
             course: true,
             semester: true,
+            isAthlete: true,
+            isSupporter: true,
+            isDirector: true,
+            isSupport: true,
+            isBateria: true,
+            modalityAthlete: {
+              select: { modality: { select: { id: true, name: true } } },
+            },
           },
         },
       },
@@ -29,6 +39,19 @@ export default async function AdminUsersPage() {
       select: { id: true, name: true, nickname: true, email: true, phone: true },
     }),
   ]);
+
+  const userRows = users.map((u) => ({
+    id: u.id,
+    email: u.email,
+    phone: u.phone,
+    role: u.role,
+    person: u.person
+      ? {
+          ...u.person,
+          modalities: u.person.modalityAthlete.map((ma) => ma.modality),
+        }
+      : null,
+  }));
 
   return (
     <div>
@@ -45,7 +68,7 @@ export default async function AdminUsersPage() {
           description="Os usuários aparecem aqui assim que entrarem pela primeira vez."
         />
       ) : (
-        <UsersTable users={users} unlinkedPersons={unlinkedPersons} />
+        <UsersTable users={userRows} unlinkedPersons={unlinkedPersons} />
       )}
     </div>
   );

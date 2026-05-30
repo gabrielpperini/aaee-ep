@@ -33,20 +33,32 @@ export const getCurrentUser = cache(async () => {
   if (existing) return existing;
 
   const normalizedEmail = authUser.email?.trim().toLowerCase() ?? null;
+  // Dados que o Supabase traz (ex: login Google preenche name no metadata).
+  const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+  const metaName =
+    (typeof meta.name === "string" && meta.name.trim()) ||
+    (typeof meta.full_name === "string" && meta.full_name.trim()) ||
+    null;
+  const metaPhoneRaw =
+    authUser.phone ||
+    (typeof meta.phone === "string" ? meta.phone : "") ||
+    "";
+  const phoneDigits = metaPhoneRaw.replace(/\D/g, "") || null;
 
   return prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
         authUserId: authUser.id,
         email: normalizedEmail,
-        phone: authUser.phone,
+        phone: phoneDigits,
       },
     });
 
-    // Auto-link por email ou telefone (pessoas importadas só têm telefone).
+    // Auto-link por email, telefone ou nome (Google traz nome, importados têm telefone).
     const match = await resolveLinkablePerson(tx, {
       email: normalizedEmail,
-      phone: authUser.phone,
+      phone: phoneDigits,
+      name: metaName,
       authUserId: authUser.id,
     });
 
@@ -58,6 +70,17 @@ export const getCurrentUser = cache(async () => {
           // Preenche o email da pessoa quando ela ainda não tem (caso típico
           // de quem foi importado por telefone) — destrava o link por email depois.
           ...(!match.email && normalizedEmail ? { email: normalizedEmail } : {}),
+        },
+      });
+    } else {
+      // Sem vínculo → cria a Person com o que o Supabase tem (nome/email/telefone),
+      // pra a conta sempre ter um nome visível.
+      await tx.person.create({
+        data: {
+          userId: newUser.id,
+          name: metaName || normalizedEmail || "Membro",
+          email: normalizedEmail,
+          phone: phoneDigits,
         },
       });
     }

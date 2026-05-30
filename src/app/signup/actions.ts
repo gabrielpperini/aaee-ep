@@ -79,13 +79,15 @@ export async function setupNewAccount(
         where: { id: target.id },
         data: {
           userId: user.id,
-          name: target.name || personData.name,
-          nickname: target.nickname ?? personData.nickname,
-          phone: target.phone ?? personData.phone,
-          course: target.course ?? personData.course,
-          semester: target.semester ?? personData.semester,
-          // Preenche o email se a pessoa importada ainda não tinha.
-          email: target.email ?? normalizedEmail,
+          // Dados do cadastro prevalecem; campo não preenchido cai pro que
+          // veio da planilha (importado). Flags de participação não são
+          // coletadas no cadastro, então ficam as do importado.
+          name: personData.name || target.name,
+          nickname: personData.nickname ?? target.nickname,
+          phone: personData.phone ?? target.phone,
+          course: personData.course ?? target.course,
+          semester: personData.semester ?? target.semester,
+          email: normalizedEmail ?? target.email,
         },
       });
       return;
@@ -93,14 +95,15 @@ export async function setupNewAccount(
 
     const existing = await tx.person.findUnique({ where: { userId: user.id } });
     if (existing) {
+      // Mesma regra: o que a pessoa preencheu prevalece; vazio mantém o atual.
       await tx.person.update({
         where: { id: existing.id },
         data: {
-          name: existing.name || personData.name,
-          nickname: existing.nickname ?? personData.nickname,
-          phone: existing.phone ?? personData.phone,
-          course: existing.course ?? personData.course,
-          semester: existing.semester ?? personData.semester,
+          name: personData.name || existing.name,
+          nickname: personData.nickname ?? existing.nickname,
+          phone: personData.phone ?? existing.phone,
+          course: personData.course ?? existing.course,
+          semester: personData.semester ?? existing.semester,
         },
       });
       return;
