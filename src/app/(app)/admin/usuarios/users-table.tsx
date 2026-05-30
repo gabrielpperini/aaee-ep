@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, BellOff, Globe, Smartphone } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -69,6 +69,8 @@ export type UserRow = {
   role: Role;
   /** Nº de dispositivos com push inscrito — 0 = não recebe notificações. */
   pushCount: number;
+  /** Já abriu o app instalado (standalone/PWA) ao menos uma vez. */
+  appInstalled: boolean;
   /** Nome vindo do metadata do Supabase (usado quando não há Person). */
   authName: string | null;
   person: PersonData | null;
@@ -249,6 +251,26 @@ export function UsersTable({
         },
       },
       {
+        id: "installed",
+        accessorFn: (u) => (u.appInstalled ? "Instalado" : "Não instalado"),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="App" />
+        ),
+        filterFn: equalsAnyFilter,
+        cell: ({ row }) =>
+          row.original.appInstalled ? (
+            <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Smartphone className="h-3 w-3" />
+              Instalado
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="gap-1 text-[10px] text-muted-foreground">
+              <Globe className="h-3 w-3" />
+              Navegador
+            </Badge>
+          ),
+      },
+      {
         id: "actions",
         header: () => null,
         cell: ({ row }) => (
@@ -293,6 +315,14 @@ export function UsersTable({
         options: [
           { label: "Ativas", value: "Ativas" },
           { label: "Inativas", value: "Inativas" },
+        ],
+      },
+      {
+        columnId: "installed",
+        title: "App",
+        options: [
+          { label: "Instalado", value: "Instalado" },
+          { label: "Não instalado", value: "Não instalado" },
         ],
       },
       {

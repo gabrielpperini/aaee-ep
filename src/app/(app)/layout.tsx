@@ -3,6 +3,7 @@ import { MobileNav } from "@/components/app/mobile-nav";
 import { ServiceWorkerRegister } from "@/components/app/service-worker-register";
 import { InstallPrompt } from "@/components/app/install-prompt";
 import { EnablePushPrompt } from "@/components/app/enable-push-prompt";
+import { InstallTracker } from "@/components/app/install-tracker";
 import { OfflineHydrator } from "@/components/app/offline-hydrator";
 import { SyncProcessor } from "@/components/app/sync-processor";
 import { OfflineBanner } from "@/components/app/offline-banner";
@@ -31,6 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ServiceWorkerRegister />
       <InstallPrompt />
       <EnablePushPrompt />
+      <InstallTracker />
       {hydration && <OfflineHydrator data={hydration} />}
       <SyncProcessor />
     </div>

@@ -96,6 +96,9 @@ model User {
   email      String?  @unique
   phone      String?
   role       Role     @default(USER)
+  /// Primeira vez que o usuário abriu o app instalado (standalone/PWA).
+  /// null = nunca abriu instalado (só pelo navegador).
+  appInstalledAt DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

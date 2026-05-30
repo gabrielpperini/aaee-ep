@@ -54,6 +54,7 @@ export default async function AdminUsersPage() {
     phone: u.phone,
     role: u.role,
     pushCount: u._count.pushSubscriptions,
+    appInstalled: u.appInstalledAt != null,
     authName: u.authUserId ? nameByAuthId.get(u.authUserId) ?? null : null,
     person: u.person
       ? {
