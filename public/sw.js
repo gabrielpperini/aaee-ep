@@ -7,7 +7,7 @@
 //
 // Push e notificationclick: ver fim do arquivo (MVP 3 / B1).
 
-const VERSION = "v3";
+const VERSION = "v4";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGES_CACHE = `pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
@@ -155,6 +155,9 @@ self.addEventListener("push", (event) => {
   const options = {
     body: payload.body || "",
     tag: payload.tag,
+    // Com tag, re-alerta a cada push mesmo repetindo a tag (senão o SO
+    // substitui a notificação anterior em silêncio — parece que "não veio").
+    renotify: Boolean(payload.tag),
     icon: "/icon.png",
     badge: "/icon.png",
     data: { url: payload.url || "/" },
