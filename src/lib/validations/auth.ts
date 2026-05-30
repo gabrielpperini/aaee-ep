@@ -79,12 +79,7 @@ export type SignupValues = z.infer<typeof signupSchema>;
 export const setupAccountSchema = z.object({
   name: requiredText("Nome", 120),
   nickname: z.string().trim().max(60),
-  phone: z
-    .string()
-    .refine(
-      (v) => v === "" || /^\d{10,11}$/u.test(v.replace(/\D/g, "")),
-      "Telefone deve ter 10 ou 11 dígitos",
-    ),
+  phone: phoneBR,
   course: z.union([courseEnum, z.literal("")]),
   semester: z.union([semester, z.literal("")]),
 });
