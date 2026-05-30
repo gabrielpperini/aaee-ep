@@ -291,8 +291,6 @@ export async function setEventStatus(
   };
 }
 
-const SUPPORTER_CALL_THROTTLE_MS = 5 * 60 * 1000; // 1 chamada / 5min por evento
-
 /**
  * "Chamado da torcida" (B6): capitão (ou manager) dispara um push pra toda a
  * torcida alocada no evento. Throttle de 5min por evento.
@@ -327,14 +325,7 @@ export async function callSupporters(
     return { ok: false, error: "Apenas capitães do evento podem chamar a torcida." };
   }
 
-  // Throttle.
   const now = nowDate();
-  if (
-    event.lastSupporterCallAt &&
-    now.getTime() - event.lastSupporterCallAt.getTime() < SUPPORTER_CALL_THROTTLE_MS
-  ) {
-    return { ok: false, error: "Aguarde alguns minutos antes de chamar a torcida de novo." };
-  }
 
   const assignments = await prisma.assignment.findMany({
     where: { eventId },
