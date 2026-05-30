@@ -61,6 +61,7 @@ const empty: EventFormValues = {
   day: 1,
   startTime: "",
   endTime: "",
+  timeTbd: false,
   locationId: "",
   opponent: "",
   phase: "OTHER",
@@ -89,6 +90,7 @@ export function EventDialog({
   }, [open, initial, form]);
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
+  const timeTbd = form.watch("timeTbd");
   const { onSubmit, pending } = useFormAction(saveEvent, form, {
     successMessage: initial?.id ? "Evento atualizado" : "Evento criado",
     onSuccess: close,
@@ -212,42 +214,86 @@ export function EventDialog({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="timeTbd"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between gap-3 rounded-lg border border-border p-3 space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Sem horário definido</FormLabel>
+                      <FormDescription>
+                        Mostra &quot;Horário a definir&quot;. Só a data importa.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={(v) => field.onChange(v === true)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {timeTbd ? (
                 <FormField
                   control={form.control}
                   name="startTime"
                   render={({ field }) => (
                     <FormItem className="min-w-0">
-                      <FormLabel>Início *</FormLabel>
+                      <FormLabel>Data *</FormLabel>
                       <FormControl>
                         <DateTimePicker
                           value={field.value}
                           onChange={field.onChange}
-                          placeholder="Início"
+                          placeholder="Data do evento"
                         />
                       </FormControl>
+                      <FormDescription>
+                        O horário escolhido aqui só serve pra ordenar no dia.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="endTime"
-                  render={({ field }) => (
-                    <FormItem className="min-w-0">
-                      <FormLabel>Fim *</FormLabel>
-                      <FormControl>
-                        <DateTimePicker
-                          value={field.value}
-                          onChange={field.onChange}
-                          placeholder="Fim"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="startTime"
+                    render={({ field }) => (
+                      <FormItem className="min-w-0">
+                        <FormLabel>Início *</FormLabel>
+                        <FormControl>
+                          <DateTimePicker
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Início"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="endTime"
+                    render={({ field }) => (
+                      <FormItem className="min-w-0">
+                        <FormLabel>Fim *</FormLabel>
+                        <FormControl>
+                          <DateTimePicker
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Fim"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <FormField

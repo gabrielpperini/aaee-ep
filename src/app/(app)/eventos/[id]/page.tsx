@@ -13,6 +13,7 @@ import {
   STATUS_LABELS,
   formatDateTime,
   formatEventTime,
+  formatEventWhen,
   priorityVariant,
   statusVariant,
 } from "@/lib/format";
@@ -29,9 +30,10 @@ function eventGreeting(
   name: string,
   eventTitle: string,
   when: Date,
+  timeTbd: boolean,
 ): string {
   const greeting = nickname || name.split(" ")[0];
-  return `Oi ${greeting}, tudo bem? Sobre o evento ${eventTitle} em ${formatDateTime(when)}...`;
+  return `Oi ${greeting}, tudo bem? Sobre o evento ${eventTitle} em ${formatEventWhen(when, timeTbd)}...`;
 }
 
 export default async function EventDetailPage({
@@ -159,7 +161,7 @@ export default async function EventDetailPage({
         eyebrow={`${event.modality.name} · Dia ${event.day}`}
         title={event.title + (event.opponent ? ` · vs ${event.opponent}` : "")}
         description={[
-          formatEventTime(event.startTime, event.endTime),
+          formatEventTime(event.startTime, event.endTime, event.timeTbd),
           event.location?.name,
           event.phase !== "OTHER" ? PHASE_LABELS[event.phase] : null,
         ]
@@ -260,6 +262,7 @@ export default async function EventDetailPage({
                           a.person.name,
                           event.title,
                           event.startTime,
+                          event.timeTbd,
                         )}
                       />
                     </div>
@@ -288,6 +291,7 @@ export default async function EventDetailPage({
                 eventId={event.id}
                 eventTitle={event.title}
                 eventStartTime={event.startTime}
+                eventTimeTbd={event.timeTbd}
                 desiredSupportersCount={event.desiredSupportersCount}
                 assignments={event.assignments.map((a) => ({
                   personId: a.personId,
@@ -330,6 +334,7 @@ export default async function EventDetailPage({
                           c.person.name,
                           event.title,
                           event.startTime,
+                          event.timeTbd,
                         )}
                       />
                     </div>

@@ -36,6 +36,7 @@ export type EventRow = {
   day: number;
   startTime: Date;
   endTime: Date;
+  timeTbd: boolean;
   modalityName: string;
   locationName: string | null;
   phase: EventPhase;
@@ -70,7 +71,7 @@ export function EventsTable({
             <div>
               <div className="text-xs text-muted-foreground">Dia {e.day}</div>
               <div className="text-sm tabular-nums">
-                {formatEventTime(e.startTime, e.endTime)}
+                {formatEventTime(e.startTime, e.endTime, e.timeTbd)}
               </div>
             </div>
           );

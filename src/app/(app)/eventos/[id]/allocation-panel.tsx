@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
-import { ASSIGNMENT_ROLE_LABELS, formatDateTime } from "@/lib/format";
+import { ASSIGNMENT_ROLE_LABELS, formatEventWhen } from "@/lib/format";
 import type { AssignmentRole } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { removeAssignment, upsertAssignment } from "./actions";
@@ -42,6 +42,7 @@ type Props = {
   eventId: string;
   eventTitle: string;
   eventStartTime: Date;
+  eventTimeTbd: boolean;
   desiredSupportersCount: number;
   assignments: AssignmentItem[];
   available: AvailableItem[];
@@ -52,9 +53,10 @@ function eventGreeting(
   name: string,
   eventTitle: string,
   when: Date,
+  timeTbd: boolean,
 ): string {
   const greeting = nickname || name.split(" ")[0];
-  return `Oi ${greeting}, tudo bem? Sobre o evento ${eventTitle} em ${formatDateTime(when)}...`;
+  return `Oi ${greeting}, tudo bem? Sobre o evento ${eventTitle} em ${formatEventWhen(when, timeTbd)}...`;
 }
 
 const ROLE_OPTIONS: AssignmentRole[] = ["SUPPORTER", "CAPTAIN", "MATERIAL_LEAD", "SUPPORT"];
@@ -63,6 +65,7 @@ export function AllocationPanel({
   eventId,
   eventTitle,
   eventStartTime,
+  eventTimeTbd,
   desiredSupportersCount,
   assignments,
   available,
@@ -203,7 +206,7 @@ export function AllocationPanel({
                   <div className="flex items-center gap-1">
                     <WhatsAppButton
                       phone={p.phone}
-                      message={eventGreeting(p.nickname, p.name, eventTitle, eventStartTime)}
+                      message={eventGreeting(p.nickname, p.name, eventTitle, eventStartTime, eventTimeTbd)}
                       size="icon-xs"
                     />
                     <Button
@@ -254,7 +257,7 @@ export function AllocationPanel({
                   <div className="flex items-center gap-1">
                     <WhatsAppButton
                       phone={a.phone}
-                      message={eventGreeting(a.nickname, a.name, eventTitle, eventStartTime)}
+                      message={eventGreeting(a.nickname, a.name, eventTitle, eventStartTime, eventTimeTbd)}
                       size="icon-xs"
                     />
                     <button

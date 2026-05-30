@@ -118,6 +118,7 @@ async function MemberHome({
     endTime: Date;
     location: { name: string; address: string | null } | null;
     modality: { name: string };
+    timeTbd: boolean;
     kind: "assigned" | "athlete";
     role?: keyof typeof ASSIGNMENT_ROLE_LABELS;
     isCaptain?: boolean;
@@ -134,6 +135,7 @@ async function MemberHome({
       endTime: e.endTime,
       location: e.location,
       modality: e.modality,
+      timeTbd: e.timeTbd,
       kind: "assigned",
       role: e.assignments[0]?.role,
       isCaptain: e.assignments[0]?.isCaptain,
@@ -148,6 +150,7 @@ async function MemberHome({
       endTime: e.endTime,
       location: e.location,
       modality: e.modality,
+      timeTbd: e.timeTbd,
       kind: "athlete",
       isConditional: e.isConditional,
       status: e.status,
@@ -334,6 +337,7 @@ function NextHero({
     endTime: Date;
     location: { name: string; address: string | null } | null;
     modality: { name: string };
+    timeTbd: boolean;
     kind: "assigned" | "athlete";
     role?: keyof typeof ASSIGNMENT_ROLE_LABELS;
     isCaptain?: boolean;
@@ -412,6 +416,7 @@ function NextCard({
     endTime: Date;
     location: { name: string; address: string | null } | null;
     modality: { name: string };
+    timeTbd: boolean;
     kind: "assigned" | "athlete";
     role?: keyof typeof ASSIGNMENT_ROLE_LABELS;
     isCaptain?: boolean;
@@ -448,7 +453,7 @@ function NextCard({
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-0.5 font-mono tabular-nums">
           <Clock className="h-3 w-3" />
-          {formatEventTime(next.startTime, next.endTime)}
+          {formatEventTime(next.startTime, next.endTime, next.timeTbd)}
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-0.5 font-semibold uppercase tracking-wider">
           {dayLabel}
@@ -534,6 +539,7 @@ function CommitmentRow({
     endTime: Date;
     modality: { name: string };
     location: { name: string; address: string | null } | null;
+    timeTbd: boolean;
   };
   role?: keyof typeof ASSIGNMENT_ROLE_LABELS;
   isCaptain?: boolean;
@@ -555,7 +561,7 @@ function CommitmentRow({
         </Link>
         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
           <span className="font-mono tabular-nums text-muted-foreground">
-            {formatEventTime(event.startTime, event.endTime)}
+            {formatEventTime(event.startTime, event.endTime, event.timeTbd)}
           </span>
           {role && (
             <Badge variant="secondary" className="text-[10px]">
@@ -584,6 +590,7 @@ function AthleteRow({
     endTime: Date;
     modality: { name: string };
     location: { name: string; address: string | null } | null;
+    timeTbd: boolean;
   };
   dateLabel: string | null;
 }) {
@@ -602,7 +609,7 @@ function AthleteRow({
           {event.title}
         </Link>
         <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground">
-          {formatEventTime(event.startTime, event.endTime)}
+          {formatEventTime(event.startTime, event.endTime, event.timeTbd)}
         </p>
       </div>
       <div className="col-span-2 sm:col-span-1 sm:justify-self-end">
@@ -624,6 +631,7 @@ function OpenEventRow({
     endTime: Date;
     modality: { name: string };
     location: { name: string; address: string | null } | null;
+    timeTbd: boolean;
     _count?: { assignments: number };
     desiredSupportersCount?: number;
   };
@@ -647,7 +655,7 @@ function OpenEventRow({
         </Link>
         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
           <span className="font-mono tabular-nums text-muted-foreground">
-            {formatEventTime(event.startTime, event.endTime)}
+            {formatEventTime(event.startTime, event.endTime, event.timeTbd)}
           </span>
           {wantedTotal > 0 && (
             <Badge variant="outline" className="text-[10px]">

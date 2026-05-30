@@ -87,15 +87,24 @@ export default async function AgendaPage({
                     >
                     <article className="group grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] items-stretch overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-foreground/30 hover:shadow-md">
                       <div className="relative flex w-24 flex-col items-center justify-center border-r border-dashed border-border bg-muted/40 px-3 py-3 text-center">
-                        <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                          Início
-                        </span>
-                        <span className="font-mono text-base font-semibold tabular-nums">
-                          {formatTimeOnly(e.startTime)}
-                        </span>
-                        <span className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
-                          até {formatTimeOnly(e.endTime)}
-                        </span>
+                        {e.timeTbd ? (
+                          <span className="text-[10px] font-semibold uppercase leading-tight tracking-wider text-muted-foreground">
+                            Horário
+                            <br />a definir
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                              Início
+                            </span>
+                            <span className="font-mono text-base font-semibold tabular-nums">
+                              {formatTimeOnly(e.startTime)}
+                            </span>
+                            <span className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
+                              até {formatTimeOnly(e.endTime)}
+                            </span>
+                          </>
+                        )}
                         <span aria-hidden className="absolute -right-1.5 top-2 h-3 w-3 rounded-full bg-background" />
                         <span aria-hidden className="absolute -right-1.5 bottom-2 h-3 w-3 rounded-full bg-background" />
                       </div>

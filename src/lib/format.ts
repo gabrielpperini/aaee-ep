@@ -10,7 +10,11 @@ import type {
 } from "@/generated/prisma/client";
 import { nowDate } from "./time";
 
-export function formatEventTime(start: Date, end: Date): string {
+/** Rótulo usado quando o evento ainda não tem horário definido (`timeTbd`). */
+export const TIME_TBD_LABEL = "Horário a definir";
+
+export function formatEventTime(start: Date, end: Date, timeTbd = false): string {
+  if (timeTbd) return TIME_TBD_LABEL;
   return `${format(start, "HH:mm")} – ${format(end, "HH:mm")}`;
 }
 
@@ -20,6 +24,11 @@ export function formatDate(date: Date): string {
 
 export function formatDateTime(date: Date): string {
   return format(date, "dd/MM HH:mm");
+}
+
+/** "Quando" pra mensagens (WhatsApp): data+hora, ou só data se sem horário. */
+export function formatEventWhen(start: Date, timeTbd = false): string {
+  return timeTbd ? `${formatDate(start)} (horário a definir)` : formatDateTime(start);
 }
 
 export function toDatetimeLocal(date: Date): string {
@@ -74,10 +83,13 @@ export function deriveEventStatus(event: {
   startTime: Date;
   endTime: Date;
   isConditional: boolean;
+  timeTbd?: boolean;
 }, now: Date = nowDate()): DerivedEventStatus {
   if (event.status === "CANCELLED" || event.status === "POSTPONED") {
     return event.status;
   }
+  // Sem horário definido não dá pra derivar "em andamento"/"finalizado".
+  if (event.timeTbd) return event.isConditional ? "POSSIBLE" : "CONFIRMED";
   if (event.endTime.getTime() < now.getTime()) return "FINISHED";
   if (event.startTime.getTime() <= now.getTime() && now.getTime() <= event.endTime.getTime()) {
     return "IN_PROGRESS";
@@ -141,6 +153,8 @@ export const COURSE_LABELS: Record<Course, string> = {
   ENERGIA: "Energia",
   METALURGICA: "Metalúrgica",
   QUIMICA: "Química",
+  ALIMENTOS: "Alimentos",
+  MINAS: "Minas",
   PRODUCAO: "Produção",
   AMBIENTAL: "Ambiental",
   FISICA: "Física",

@@ -29,15 +29,19 @@ export async function saveEvent(
     locationId,
     startTime,
     endTime,
+    timeTbd,
     description,
     opponent,
     ...rest
   } = parsed.data;
 
+  const start = new Date(startTime);
   const data = {
     ...rest,
-    startTime: new Date(startTime),
-    endTime: new Date(endTime),
+    timeTbd,
+    startTime: start,
+    // Sem horário definido: o fim só ancora a data (igual ao início).
+    endTime: timeTbd ? start : new Date(endTime),
     locationId: locationId || null,
     description: description?.trim() || null,
     opponent: opponent?.trim() || null,

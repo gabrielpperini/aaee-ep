@@ -150,7 +150,7 @@ export default async function DashboardPage() {
                     href={`/eventos/${e.id}`}
                     title={e.title}
                     subtitle={`${e.modality.name}${e.location ? ` · ${e.location.name}` : ""}`}
-                    time={formatEventTime(e.startTime, e.endTime)}
+                    time={formatEventTime(e.startTime, e.endTime, e.timeTbd)}
                     rightBadges={[
                       <Badge key="prio" variant={priorityVariant(e.priority)}>
                         {PRIORITY_LABELS[e.priority]}
@@ -184,7 +184,7 @@ export default async function DashboardPage() {
                     href={`/eventos/${e.id}`}
                     title={e.title}
                     subtitle={`${e.modality.name}${e.location ? ` · ${e.location.name}` : ""}`}
-                    time={formatEventTime(e.startTime, e.endTime)}
+                    time={formatEventTime(e.startTime, e.endTime, e.timeTbd)}
                     rightBadges={[
                       <Badge key="prio" variant={priorityVariant(e.priority)}>
                         {PRIORITY_LABELS[e.priority]}
@@ -219,7 +219,7 @@ export default async function DashboardPage() {
                       href={`/eventos/${e.id}`}
                       title={e.title}
                       subtitle={`Dia ${e.day} · ${e.modality.name}`}
-                      time={formatEventTime(e.startTime, e.endTime)}
+                      time={formatEventTime(e.startTime, e.endTime, e.timeTbd)}
                       rightBadges={[
                         <Badge key="prio" variant={priorityVariant(e.priority)}>
                           {PRIORITY_LABELS[e.priority]}

@@ -35,6 +35,7 @@ export async function GET(request: Request) {
       person: { userId: { not: null } },
       event: {
         status: "CONFIRMED",
+        timeTbd: false, // sem horário definido não tem T-30 pra lembrar
         startTime: { gte: windowStart, lte: windowEnd },
       },
     },

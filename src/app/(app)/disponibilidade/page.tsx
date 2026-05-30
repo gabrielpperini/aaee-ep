@@ -16,6 +16,7 @@ type Item = {
   locationAddress: string | null;
   startTime: Date;
   endTime: Date;
+  timeTbd: boolean;
   kind: "competing" | "assigned";
   role?: keyof typeof ASSIGNMENT_ROLE_LABELS;
   isCaptain?: boolean;
@@ -81,6 +82,7 @@ export default async function MeuHorarioPage() {
         locationAddress: e.location?.address ?? null,
         startTime: e.startTime,
         endTime: e.endTime,
+        timeTbd: e.timeTbd,
         kind: "competing",
       };
     }
@@ -92,6 +94,7 @@ export default async function MeuHorarioPage() {
       locationAddress: e.location?.address ?? null,
       startTime: e.startTime,
       endTime: e.endTime,
+      timeTbd: e.timeTbd,
       kind: "assigned",
       role: e.assignments[0]?.role,
       isCaptain: e.assignments[0]?.isCaptain,
@@ -204,12 +207,21 @@ function ItemRow({ item }: { item: Item }) {
       }
     >
       <div className="flex w-20 flex-col items-center justify-center rounded-lg border border-border bg-background px-2 py-2 text-center">
-        <span className="font-mono text-base font-semibold tabular-nums">
-          {formatHour(item.startTime)}
-        </span>
-        <span className="text-[10px] text-muted-foreground tabular-nums">
-          até {formatHour(item.endTime)}
-        </span>
+        {item.timeTbd ? (
+          <span className="text-[10px] font-semibold uppercase leading-tight text-muted-foreground">
+            Horário
+            <br />a definir
+          </span>
+        ) : (
+          <>
+            <span className="font-mono text-base font-semibold tabular-nums">
+              {formatHour(item.startTime)}
+            </span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              até {formatHour(item.endTime)}
+            </span>
+          </>
+        )}
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -234,7 +246,7 @@ function ItemRow({ item }: { item: Item }) {
                 : "Escalado"}
           </Badge>
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-            {formatEventTime(item.startTime, item.endTime)}
+            {formatEventTime(item.startTime, item.endTime, item.timeTbd)}
           </span>
         </div>
       </div>

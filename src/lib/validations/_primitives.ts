@@ -124,6 +124,8 @@ export const courseEnum = z.enum([
   "ENERGIA",
   "METALURGICA",
   "QUIMICA",
+  "ALIMENTOS",
+  "MINAS",
   "PRODUCAO",
   "AMBIENTAL",
   "FISICA",

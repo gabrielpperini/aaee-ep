@@ -68,6 +68,8 @@ enum Course {
   ENERGIA
   METALURGICA
   QUIMICA
+  ALIMENTOS
+  MINAS
   PRODUCAO
   AMBIENTAL
   FISICA
@@ -203,6 +205,9 @@ model Event {
   day                    Int           // 0 (ida/chegada), 1, 2, 3 (dias principais) ou 4 (volta)
   startTime              DateTime
   endTime                DateTime
+  /// Horário ainda não definido — startTime/endTime servem só de âncora de data.
+  /// A UI mostra "Horário a definir" e o status derivado ignora os tempos.
+  timeTbd                Boolean       @default(false)
   locationId             String?
   opponent               String?
   phase                  EventPhase    @default(OTHER)
