@@ -144,6 +144,8 @@ export const COURSE_LABELS: Record<Course, string> = {
   PRODUCAO: "Produção",
   AMBIENTAL: "Ambiental",
   FISICA: "Física",
+  ARQUITETURA_URBANISMO: "Arquitetura e Urbanismo",
+  AGRONOMIA: "Agronomia",
 };
 
 export const COURSE_OPTIONS: { value: Course; label: string }[] = (

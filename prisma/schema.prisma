@@ -71,6 +71,8 @@ enum Course {
   PRODUCAO
   AMBIENTAL
   FISICA
+  ARQUITETURA_URBANISMO
+  AGRONOMIA
 }
 
 /// Papel da pessoa numa alocação de torcida em um evento.

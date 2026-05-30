@@ -127,6 +127,8 @@ export const courseEnum = z.enum([
   "PRODUCAO",
   "AMBIENTAL",
   "FISICA",
+  "ARQUITETURA_URBANISMO",
+  "AGRONOMIA",
 ]);
 export type CourseValue = z.infer<typeof courseEnum>;
 
