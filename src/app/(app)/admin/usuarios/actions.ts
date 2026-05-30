@@ -12,7 +12,68 @@ import {
   type FormState,
 } from "@/lib/validations/_action-result";
 import { userEditSchema, type UserEditFormValues } from "@/lib/validations/user";
+import { Prisma } from "@/generated/prisma/client";
 
+/**
+ * Cria uma Person a partir dos dados do login (nome do metadata do Supabase —
+ * ex: login Google —, email e telefone) e vincula ao usuário. Usado no admin
+ * quando uma conta ficou sem pessoa.
+ */
+export async function createPersonFromUser(userId: string): Promise<FormState> {
+  await requireRole(["ADMIN"]);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { person: { select: { id: true } } },
+  });
+  if (!user) return failure("Usuário não encontrado.");
+  if (user.person) return failure("Esse usuário já tem pessoa vinculada.");
+
+  // Nome vem do metadata do Supabase auth (name / full_name).
+  let metaName: string | null = null;
+  if (user.authUserId) {
+    const rows = await prisma.$queryRawUnsafe<{ raw_user_meta_data: Record<string, unknown> }[]>(
+      `SELECT raw_user_meta_data FROM auth.users WHERE id = $1`,
+      user.authUserId,
+    );
+    const m = rows[0]?.raw_user_meta_data ?? {};
+    metaName =
+      (typeof m.name === "string" && m.name.trim()) ||
+      (typeof m.full_name === "string" && m.full_name.trim()) ||
+      null;
+  }
+  const phone = (user.phone ?? "").replace(/\D/g, "") || null;
+
+  // Telefone não é único no schema — checa manualmente pra não duplicar.
+  if (phone) {
+    const phoneOwner = await prisma.person.findFirst({
+      where: { phone },
+      select: { id: true },
+    });
+    if (phoneOwner) {
+      return failure("Já existe uma pessoa com esse telefone. Use 'Editar' para vincular.");
+    }
+  }
+
+  try {
+    await prisma.person.create({
+      data: {
+        userId: user.id,
+        name: metaName || user.email || "Membro",
+        email: user.email,
+        phone,
+      },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return failure("Já existe uma pessoa com esse email. Use 'Editar' para vincular.");
+    }
+    throw e;
+  }
+
+  revalidatePath("/admin/usuarios");
+  return success();
+}
 
 async function applyRoleChange(
   userId: string,

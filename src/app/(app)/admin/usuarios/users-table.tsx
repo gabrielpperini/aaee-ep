@@ -18,6 +18,7 @@ import { COURSE_LABELS } from "@/lib/format";
 import type { Role, Course } from "@/generated/prisma/client";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { UserRowActions } from "./row-actions";
+import { CreatePersonButton } from "./create-person-button";
 
 const ROLE_LABEL: Record<Role, string> = {
   USER: "Membro",
@@ -150,7 +151,12 @@ export function UsersTable({
                           )}
                         </Link>
                       ) : (
-                        <span className="text-muted-foreground">— sem pessoa —</span>
+                        <div className="flex flex-col items-start gap-1.5">
+                          <Badge variant="destructive" className="text-[10px]">
+                            Sem pessoa vinculada
+                          </Badge>
+                          <CreatePersonButton userId={u.id} />
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
