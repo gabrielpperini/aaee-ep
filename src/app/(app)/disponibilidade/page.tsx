@@ -38,7 +38,7 @@ export default async function MeuHorarioPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Precisamos do seu cadastro pra montar sua agenda pessoal.
           </p>
-          <Link
+          <Link prefetch
             href="/perfil"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
           >
@@ -228,7 +228,7 @@ function ItemRow({ item }: { item: Item }) {
           {item.modalityName}
           {item.locationName ? ` · ${item.locationName}` : ""}
         </p>
-        <Link
+        <Link prefetch
           href={`/eventos/${item.eventId}`}
           className="block font-display text-lg font-semibold leading-tight tracking-tight hover:underline truncate"
         >

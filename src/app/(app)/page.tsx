@@ -287,7 +287,7 @@ async function ManagementHome({
         <p className="mt-2 text-sm text-muted-foreground">
           Complete seu perfil para acessar sua agenda pessoal.
         </p>
-        <Link
+        <Link prefetch
           href="/perfil"
           className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
         >
@@ -440,7 +440,7 @@ function NextCard({
           {next.kind === "athlete" ? "Você compete" : "Você está escalado"}
         </Badge>
       </div>
-      <Link
+      <Link prefetch
         href={`/eventos/${next.id}`}
         className="mt-2 block font-display text-2xl font-semibold leading-tight tracking-tight hover:underline"
       >
@@ -470,7 +470,7 @@ function NextCard({
         )}
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Link
+        <Link prefetch
           href={`/eventos/${next.id}`}
           className="inline-flex items-center gap-2 rounded-full bg-foreground px-3.5 py-1.5 text-xs font-semibold text-background hover:-translate-y-0.5 transition-transform"
         >
@@ -511,7 +511,7 @@ function Section({
           )}
         </div>
         {href && hrefLabel && (
-          <Link
+          <Link prefetch
             href={href}
             className="group inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 whitespace-nowrap"
           >
@@ -553,7 +553,7 @@ function CommitmentRow({
           {event.modality.name}
           {event.location ? ` · ${event.location.name}` : ""}
         </p>
-        <Link
+        <Link prefetch
           href={`/eventos/${event.id}`}
           className="block font-display text-lg font-semibold leading-tight hover:underline truncate"
         >
@@ -602,7 +602,7 @@ function AthleteRow({
           {event.modality.name}
           {event.location ? ` · ${event.location.name}` : ""}
         </p>
-        <Link
+        <Link prefetch
           href={`/eventos/${event.id}`}
           className="block font-display text-lg font-semibold leading-tight hover:underline truncate"
         >
@@ -647,7 +647,7 @@ function OpenEventRow({
           {event.modality.name}
           {event.location ? ` · ${event.location.name}` : ""}
         </p>
-        <Link
+        <Link prefetch
           href={`/eventos/${event.id}`}
           className="block font-display text-lg font-semibold leading-tight hover:underline truncate"
         >
@@ -728,7 +728,7 @@ function ManagerStrip({
         {stats.map((s) => {
           const Icon = s.icon;
           return (
-            <Link
+            <Link prefetch
               key={s.label}
               href={s.href}
               className="group relative block overflow-hidden rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-foreground/30 hover:shadow-md"

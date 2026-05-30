@@ -81,7 +81,7 @@ export default async function AgendaPage({
               <ul className="mt-4 space-y-3">
                 {byDay.get(d)!.map((e) => (
                   <li key={e.id}>
-                    <Link
+                    <Link prefetch
                       href={`/eventos/${e.id}`}
                       className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
                     >
@@ -189,7 +189,7 @@ function DayChip({ day, active }: { day: number | null; active: boolean }) {
   const href = day === null ? "/agenda" : `/agenda?day=${day}`;
   const label = day === null ? "Todos" : (EP_DAY_SHORT_LABEL[day] ?? `Dia ${day}`);
   return (
-    <Link
+    <Link prefetch
       href={href}
       className={cn(
         "rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all",

@@ -64,7 +64,7 @@ export function EventRowActions({ event, modalities, locations, athletes }: Prop
           <MoreHorizontal className="h-4 w-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem render={<Link href={`/eventos/${event.id}`} />}>
+          <DropdownMenuItem render={<Link prefetch href={`/eventos/${event.id}`} />}>
             Abrir detalhe
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)}>Editar</DropdownMenuItem>

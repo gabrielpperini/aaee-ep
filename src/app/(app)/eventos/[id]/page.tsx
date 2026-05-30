@@ -150,7 +150,7 @@ export default async function EventDetailPage({
 
   return (
     <div>
-      <Link
+      <Link prefetch
         href="/agenda"
         className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
       >

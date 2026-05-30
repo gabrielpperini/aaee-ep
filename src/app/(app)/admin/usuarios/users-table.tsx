@@ -106,7 +106,7 @@ export function UsersTable({
         cell: ({ row }) => {
           const u = row.original;
           return u.person ? (
-            <Link href="/pessoas" className="font-medium hover:underline">
+            <Link prefetch href="/pessoas" className="font-medium hover:underline">
               {u.person.name}
               {u.person.nickname && (
                 <span className="text-muted-foreground"> ({u.person.nickname})</span>

@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
               Link inválido ou expirado. Volte ao login e peça um novo email de
               redefinição.
             </p>
-            <Link
+            <Link prefetch
               href="/login"
               className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline"
             >

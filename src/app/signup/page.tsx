@@ -132,7 +132,7 @@ export default function SignupPage() {
                 acabou de criar.
               </p>
             </div>
-            <Link
+            <Link prefetch
               href="/login"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
             >
@@ -354,7 +354,7 @@ export default function SignupPage() {
 
             <p className="mt-8 text-center text-sm text-muted-foreground">
               Já tem conta?{" "}
-              <Link
+              <Link prefetch
                 href="/login"
                 className="font-semibold text-primary hover:underline"
               >

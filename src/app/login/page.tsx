@@ -204,7 +204,7 @@ function LoginForm() {
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Não tem conta?{" "}
-            <Link
+            <Link prefetch
               href="/signup"
               className="font-semibold text-primary hover:underline"
             >

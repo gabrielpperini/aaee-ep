@@ -292,7 +292,7 @@ function EventRow({
 }) {
   return (
     <li>
-      <Link
+      <Link prefetch
         href={href}
         className="group flex items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-foreground/30 hover:bg-accent"
       >

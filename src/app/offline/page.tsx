@@ -21,7 +21,7 @@ export default function OfflinePage() {
           Tente novamente quando voltar pra rede.
         </p>
       </div>
-      <Button render={<Link href="/" />}>Tentar novamente</Button>
+      <Button render={<Link prefetch href="/" />}>Tentar novamente</Button>
     </div>
   );
 }

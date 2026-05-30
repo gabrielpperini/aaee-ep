@@ -15,7 +15,7 @@ export function PendingSyncBadge({ className }: { className?: string }) {
   if (!count) return null;
 
   return (
-    <Link
+    <Link prefetch
       href="/perfil#sync"
       title={`${count} ${count === 1 ? "alteração pendente" : "alterações pendentes"} de sincronização`}
       className={cn(
