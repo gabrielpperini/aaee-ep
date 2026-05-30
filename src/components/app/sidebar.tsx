@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { Download, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/app/auth/actions";
@@ -10,6 +10,8 @@ import { BrandMark } from "@/components/brand-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NAV_ITEMS, hasAccess, roleLabel, type NavItem } from "@/components/app/nav-items";
 import { PendingSyncBadge } from "@/components/app/pending-sync-badge";
+import { openInstallPrompt } from "@/components/app/install-prompt";
+import { useStandaloneMode } from "@/lib/hooks/use-standalone-mode";
 import type { Role } from "@/generated/prisma/client";
 
 const GROUP_LABELS: Record<NavItem["group"], string> = {
@@ -131,6 +133,7 @@ function NavList({ role }: { role: Role }) {
 }
 
 function SidebarFooter({ name, role }: { name: string; role: Role }) {
+  const standalone = useStandaloneMode();
   return (
     <div className="relative z-10 border-t border-sidebar-border px-3 py-3 space-y-1">
       <div className="flex items-center gap-3 px-2 py-2">
@@ -149,6 +152,18 @@ function SidebarFooter({ name, role }: { name: string; role: Role }) {
       </div>
       <PendingSyncBadge className="mx-2 w-fit" />
       <ThemeToggle className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
+      {!standalone && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => openInstallPrompt()}
+          className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Instalar app
+        </Button>
+      )}
       <form action={signOut}>
         <Button
           type="submit"

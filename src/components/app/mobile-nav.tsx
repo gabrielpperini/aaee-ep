@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu } from "lucide-react";
+import { Download, LogOut, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -12,6 +12,8 @@ import { BrandMark } from "@/components/brand-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NAV_ITEMS, hasAccess, roleLabel, type NavItem } from "@/components/app/nav-items";
 import { PendingSyncBadge } from "@/components/app/pending-sync-badge";
+import { openInstallPrompt } from "@/components/app/install-prompt";
+import { useStandaloneMode } from "@/lib/hooks/use-standalone-mode";
 import type { Role } from "@/generated/prisma/client";
 
 const GROUP_LABELS: Record<NavItem["group"], string> = {
@@ -23,6 +25,7 @@ const GROUP_LABELS: Record<NavItem["group"], string> = {
 export function MobileNav({ role, name }: { role: Role; name: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const standalone = useStandaloneMode();
 
   const closeOnNav = () => setOpen(false);
 
@@ -135,6 +138,21 @@ export function MobileNav({ role, name }: { role: Role; name: string }) {
                     </p>
                   </div>
                   <ThemeToggle className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
+                  {!standalone && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setOpen(false);
+                        openInstallPrompt();
+                      }}
+                      className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Instalar app
+                    </Button>
+                  )}
                   <form action={signOut}>
                     <Button
                       type="submit"
