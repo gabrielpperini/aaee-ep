@@ -272,6 +272,7 @@ export function AllocationPanel({
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Select
+                    items={ASSIGNMENT_ROLE_LABELS}
                     value={a.role}
                     onValueChange={(v) => update({ personId: a.personId, role: v as AssignmentRole })}
                   >
