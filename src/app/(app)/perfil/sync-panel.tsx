@@ -9,6 +9,7 @@ import {
   CloudOff,
   RefreshCw,
   RotateCcw,
+  ShieldAlert,
   Trash2,
   X,
 } from "lucide-react";
@@ -26,13 +27,17 @@ import {
   clearLocalCache,
   discardOp,
   forceSync,
+  resolveOp,
   retryOp,
 } from "@/lib/db/sync-queue";
+import { isForceable } from "@/lib/sync/conflict";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
 
 const KIND_LABEL: Record<PendingOp["kind"], string> = {
   checkIn: "Check-in",
   undoCheckIn: "Desfazer check-in",
+  allocate: "Escalação",
+  deallocate: "Remover da escala",
 };
 
 const STATUS_META: Record<
@@ -186,21 +191,38 @@ export function SyncPanel() {
                     )}
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    {isIssue && (
+                    {op.status === "conflict" && op.conflict && isForceable(op.conflict) ? (
                       <Button
                         size="sm"
                         variant="ghost"
                         disabled={pending || !online}
                         onClick={() =>
                           startTransition(async () => {
-                            await retryOp(op.id);
+                            await resolveOp(op.id, { force: true });
                           })
                         }
-                        className="h-7 px-2 text-xs"
+                        className="h-7 px-2 text-xs text-amber-700 dark:text-amber-400"
                       >
-                        <RotateCcw className="mr-1 h-3 w-3" />
-                        Tentar
+                        <ShieldAlert className="mr-1 h-3 w-3" />
+                        Forçar
                       </Button>
+                    ) : (
+                      isIssue && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={pending || !online}
+                          onClick={() =>
+                            startTransition(async () => {
+                              await retryOp(op.id);
+                            })
+                          }
+                          className="h-7 px-2 text-xs"
+                        >
+                          <RotateCcw className="mr-1 h-3 w-3" />
+                          Tentar
+                        </Button>
+                      )
                     )}
                     <Button
                       size="sm"

@@ -9,10 +9,11 @@ import { ASSIGNMENT_ROLE_LABELS, COMMITTED_STATUSES } from "@/lib/format";
 import { nowDate } from "@/lib/time";
 import { sendPushToUser, sendPushToUsers } from "@/lib/push";
 import { callSupportersSchema } from "@/lib/validations/push";
+import type { ConflictKind } from "@/lib/sync/conflict";
 
 export type ActionResult<TData = undefined> =
   | { ok: true; data?: TData }
-  | { ok: false; error: string };
+  | { ok: false; error: string; conflict?: ConflictKind };
 
 const CHECKIN_OPEN_BEFORE_MS = 30 * 60 * 1000; // libera 30min antes
 const CHECKIN_OPEN_AFTER_MS = 60 * 60 * 1000; // expira 60min depois
@@ -43,7 +44,11 @@ export async function upsertAssignment(
   });
   if (!targetEvent) return { ok: false, error: "Evento não encontrado." };
   if (targetEvent.status === "CANCELLED") {
-    return { ok: false, error: "Não é possível escalar pessoas em evento cancelado." };
+    return {
+      ok: false,
+      error: "Não é possível escalar pessoas em evento cancelado.",
+      conflict: "event-cancelled",
+    };
   }
 
   // Conflito: a pessoa está competindo em outro evento que sobrepõe?
@@ -63,6 +68,7 @@ export async function upsertAssignment(
     return {
       ok: false,
       error: `Pessoa está competindo em "${competingElsewhere.event.title}" no mesmo horário.`,
+      conflict: "competing",
     };
   }
 
@@ -72,7 +78,11 @@ export async function upsertAssignment(
     select: { eventId: true },
   });
   if (competingHere) {
-    return { ok: false, error: "Pessoa é atleta neste evento e não pode ser escalada como torcida." };
+    return {
+      ok: false,
+      error: "Pessoa é atleta neste evento e não pode ser escalada como torcida.",
+      conflict: "athlete-here",
+    };
   }
 
   // Conflito: alocada em outro evento que sobrepõe (passa com `force`).
@@ -93,6 +103,7 @@ export async function upsertAssignment(
       return {
         ok: false,
         error: `Pessoa já está escalada em "${conflicting.event.title}" no mesmo horário.`,
+        conflict: "already-allocated",
       };
     }
   }

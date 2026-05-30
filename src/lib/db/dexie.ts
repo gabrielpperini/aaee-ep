@@ -11,6 +11,7 @@
 // IndexedDB não existe durante o SSR).
 
 import Dexie, { type Table } from "dexie";
+import type { ConflictKind } from "@/lib/sync/conflict";
 
 export type OfflineEvent = {
   id: string;
@@ -29,6 +30,8 @@ export type OfflineAssignment = {
   personId: string;
   role: string;
   isCaptain: boolean;
+  /** Marca alocações criadas otimisticamente offline, ainda não confirmadas. */
+  pending?: boolean;
 };
 
 export type OfflineCheckIn = {
@@ -41,15 +44,31 @@ export type OfflineCheckIn = {
 
 export type MetaEntry = { key: string; value: unknown };
 
-/** Tipos de escrita que a fila offline cobre hoje (Bloco C2). */
-export type SyncOpKind = "checkIn" | "undoCheckIn";
+/** Tipos de escrita que a fila offline cobre (Bloco C2). */
+export type SyncOpKind = "checkIn" | "undoCheckIn" | "allocate" | "deallocate";
 export type SyncOpStatus = "pending" | "done" | "conflict" | "failed";
+
+/**
+ * Dados que a action precisa pra re-executar. `eventId` + `personId` sempre
+ * presentes; os campos de alocação só fazem sentido pra `allocate`.
+ */
+export type PendingOpPayload = {
+  eventId: string;
+  personId: string;
+  role?: string;
+  isCaptain?: boolean;
+  notes?: string;
+  /** Sobrepõe conflito de "já alocada" na hora de sincronizar (resolução). */
+  force?: boolean;
+};
 
 export type PendingOp = {
   id: string; // cuid gerado no client
   kind: SyncOpKind;
-  payload: { eventId: string };
+  payload: PendingOpPayload;
   status: SyncOpStatus;
+  /** Quando `status === "conflict"`, classifica o motivo pra resolução na UI. */
+  conflict?: ConflictKind;
   error?: string;
   createdAt: string; // ISO
 };

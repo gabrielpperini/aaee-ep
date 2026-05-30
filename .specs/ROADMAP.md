@@ -99,21 +99,33 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 **Objetivo:** Tornar o app utilizável durante o evento mesmo com internet ruim, e avisar a pessoa quando algo relevante muda (próximo evento, mudança de alocação, capitão chamando torcida).
 
+> **Status (2026-05-30):** os três blocos do [plano de execução](./mvp-3-plano.md) (A/B/C)
+> estão implementados e cabeados em produção. O que falta é validação manual em
+> dispositivo real — ver [relatório de validação](./mvp-3-validacao.md).
+
 ### Entregas
 
-- [ ] PWA: manifest + service worker
-- [ ] IndexedDB com Dexie para cache local de:
-  - Agenda completa dos 3 dias
-  - Disponibilidade da própria pessoa
-  - Alocações da própria pessoa
-- [ ] Fila de `SyncOperation` para alterações offline
-  - Disponibilidade, check-in, alocação
-- [ ] Sincronização ao voltar online
-- [ ] Resolução de conflitos
+- [x] PWA: manifest + service worker (`src/app/manifest.ts`, `public/sw.js`) — Bloco A
+- [x] IndexedDB com Dexie para cache local (`src/lib/db/dexie.ts`) — Bloco C1
+  - Agenda completa dos 3 dias (`events`)
+  - Alocações da própria pessoa (`assignments`)
+  - Check-ins (`checkIns`) — _disponibilidade virou read-only/implícita no MVP 2,_
+    _não há tabela própria; ver `AvailabilitySlot` descartado_
+- [x] Fila de `SyncOperation` para alterações offline (`src/lib/db/sync-queue.ts`) — Bloco C2
+  - Check-in: enfileirado via `enqueueOrRun` com efeito otimista
+  - _Disponibilidade: N/A — read-only desde o MVP 2, nada a enfileirar_
+  - _Alocação: caminho de fila pronto (conflito → `conflict`) mas ainda não cabeado_
+    _na UI de alocação; só diretores escalam, sempre online_
+- [x] Sincronização ao voltar online (`processQueue` + `<SyncProcessor />`) — Bloco C3
+  - Listener `online` + Background Sync API (tag `sync-queue`) com fallback
+- [x] Resolução de conflitos — Bloco C3
   - Dados pessoais: última alteração da própria pessoa vence
-  - Alocações conflitantes: alerta para diretores
-  - Check-ins: mantidos como histórico, sem sobrescrever
-- [ ] Indicador de "alterações pendentes" na UI
+  - Alocações conflitantes: detecção por heurística de erro → `conflict` + log no servidor
+    (`SyncOperation`); _não exercitado na prática pois a fila só cobre check-in idempotente_
+  - Check-ins: idempotentes (upsert), mantidos como histórico
+- [x] Indicador de "alterações pendentes" na UI (`<PendingSyncBadge />`) — Bloco C4
+- [x] Banner "Você está offline" + aviso em telas não-offline + "Forçar sync" +
+  "Limpar cache local" + log de 50 eventos de sync — Bloco C4
 - [x] **Notificações push em todos os dispositivos possíveis (Web Push API + VAPID)** — Bloco B completo
   - **Cobertura por plataforma:**
     - Android: Chrome/Firefox/Edge/Samsung Internet — direto pelo navegador

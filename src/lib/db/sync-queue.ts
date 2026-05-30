@@ -1,31 +1,54 @@
 // Fila de escrita offline (client-only) — MVP 3 / Bloco C2+C3.
 //
 // `enqueueOrRun` é o ponto único por onde passam as escritas que precisam
-// funcionar offline (hoje: check-in / desfazer check-in). Online, executa a
-// action direto; offline (ou se a rede cair no meio), enfileira em
-// `pendingOps` e aplica o efeito otimista no cache local.
+// funcionar offline: check-in (idempotente) e alocação de torcida (gera
+// conflito). Online, executa a action direto; offline (ou se a rede cair no
+// meio), enfileira em `pendingOps` e aplica o efeito otimista no cache local.
 //
-// O processamento da fila (drenagem + conflitos) vive em `processQueue`
-// (Bloco C3).
+// Merge: a fila guarda só o ÚLTIMO intento por chave (família+evento+pessoa).
+// Como `upsert`/`delete` são operações absolutas (não deltas), uma nova op na
+// mesma chave SUBSTITUI a anterior pendente — last-write-wins. Sincronizar o
+// último intento contra o servidor produz o estado final correto.
+//
+// O processamento da fila (drenagem + conflitos) vive em `processQueue` (C3).
 
 import {
   db,
   type PendingOp,
+  type PendingOpPayload,
   type SyncOpKind,
   type SyncLogEntry,
 } from "@/lib/db/dexie";
-import { checkIn, undoCheckIn } from "@/app/(app)/eventos/[id]/actions";
+import type { ConflictKind } from "@/lib/sync/conflict";
+import type { AssignmentRole } from "@/generated/prisma/client";
+import {
+  checkIn,
+  undoCheckIn,
+  upsertAssignment,
+  removeAssignment,
+} from "@/app/(app)/eventos/[id]/actions";
 import { logSyncOperation } from "@/lib/db/sync-actions";
 
-/** Shape estrutural do retorno das server actions de check-in (`ActionResult`). */
-export type QueueActionResult = { ok: true } | { ok: false; error: string };
+/** Shape estrutural do retorno das server actions (`ActionResult`). */
+export type QueueActionResult =
+  | { ok: true }
+  | { ok: false; error: string; conflict?: ConflictKind };
 
 export type EnqueueResult =
   | { status: "done" }
   | { status: "queued" }
-  | { status: "error"; error: string };
+  | { status: "error"; error: string; conflict?: ConflictKind };
 
-type OpMeta = { kind: SyncOpKind; eventId: string; personId: string };
+/** Tudo que a fila precisa pra re-executar e refletir a op localmente. */
+export type OpMeta = {
+  kind: SyncOpKind;
+  eventId: string;
+  personId: string;
+  role?: AssignmentRole;
+  isCaptain?: boolean;
+  notes?: string;
+  force?: boolean;
+};
 
 const SYNC_LOG_LIMIT = 50;
 
@@ -39,22 +62,54 @@ function newId(): string {
     : `op_${Date.now()}_${Math.floor(Math.random() * 1e9)}`;
 }
 
-/** Reflete a escrita no cache local. `pending` distingue otimista de confirmado. */
-async function applyLocal(meta: OpMeta, pending: boolean): Promise<void> {
-  if (meta.kind === "checkIn") {
-    await db.checkIns.put({
-      eventId: meta.eventId,
-      personId: meta.personId,
-      checkedAt: new Date().toISOString(),
-      pending,
-    });
-  } else {
-    await db.checkIns.delete([meta.eventId, meta.personId]);
-  }
+/** Família da operação — ops da mesma família+chave se substituem. */
+function family(kind: SyncOpKind): "checkin" | "allocation" {
+  return kind === "checkIn" || kind === "undoCheckIn" ? "checkin" : "allocation";
 }
 
-function pendingForEvent(ops: PendingOp[], eventId: string): PendingOp | undefined {
-  return ops.find((o) => o.status === "pending" && o.payload.eventId === eventId);
+/** Chave de coalescência: uma escrita "viva" por família+evento+pessoa. */
+function keyOf(kind: SyncOpKind, eventId: string, personId: string): string {
+  return `${family(kind)}:${eventId}:${personId}`;
+}
+
+function payloadFromMeta(meta: OpMeta): PendingOpPayload {
+  return {
+    eventId: meta.eventId,
+    personId: meta.personId,
+    role: meta.role,
+    isCaptain: meta.isCaptain,
+    notes: meta.notes,
+    force: meta.force,
+  };
+}
+
+/** Reflete a escrita no cache local. `pending` distingue otimista de confirmado. */
+async function applyLocal(meta: OpMeta, pending: boolean): Promise<void> {
+  switch (meta.kind) {
+    case "checkIn":
+      await db.checkIns.put({
+        eventId: meta.eventId,
+        personId: meta.personId,
+        checkedAt: new Date().toISOString(),
+        pending,
+      });
+      break;
+    case "undoCheckIn":
+      await db.checkIns.delete([meta.eventId, meta.personId]);
+      break;
+    case "allocate":
+      await db.assignments.put({
+        eventId: meta.eventId,
+        personId: meta.personId,
+        role: meta.role ?? "SUPPORTER",
+        isCaptain: meta.isCaptain ?? false,
+        pending,
+      });
+      break;
+    case "deallocate":
+      await db.assignments.delete([meta.eventId, meta.personId]);
+      break;
+  }
 }
 
 export async function log(
@@ -78,8 +133,8 @@ export async function log(
 
 /**
  * Executa a `action` se online; senão (ou se a rede falhar) enfileira a
- * operação e aplica o efeito otimista. Operações inversas pendentes sobre o
- * mesmo evento se cancelam (check-in seguido de desfazer offline → fila limpa).
+ * operação e aplica o efeito otimista. Coalescência last-write-wins: uma nova
+ * op na mesma chave (família+evento+pessoa) substitui a pendente anterior.
  */
 export async function enqueueOrRun(
   action: () => Promise<QueueActionResult>,
@@ -93,36 +148,43 @@ export async function enqueueOrRun(
         return { status: "done" };
       }
       // Erro de regra (janela fechada, conflito) — não enfileira, propaga.
-      return { status: "error", error: result.error };
+      return { status: "error", error: result.error, conflict: result.conflict };
     } catch {
       // Falha de rede no meio — cai pro enfileiramento.
     }
   }
 
+  const key = keyOf(meta.kind, meta.eventId, meta.personId);
   const all = await db.pendingOps.toArray();
-  const prior = pendingForEvent(all, meta.eventId);
+  const prior = all.find(
+    (o) =>
+      o.status === "pending" &&
+      keyOf(o.kind, o.payload.eventId, o.payload.personId) === key,
+  );
+  const payload = payloadFromMeta(meta);
 
-  if (prior && prior.kind !== meta.kind) {
-    // Operação inversa cancela a anterior; aplica o novo efeito local.
-    await db.pendingOps.delete(prior.id);
+  if (prior) {
+    // Substitui o intento anterior pelo novo (inclui cancelar via inverso).
+    await db.pendingOps.update(prior.id, {
+      kind: meta.kind,
+      payload,
+      conflict: undefined,
+      error: undefined,
+    });
     await applyLocal(meta, true);
-    await log("info", `Fila: ${meta.kind} cancelou ${prior.kind} (${meta.eventId})`);
+    await log("info", `Fila: ${meta.kind} substituiu ${prior.kind} (${key})`);
     return { status: "queued" };
   }
-  if (prior && prior.kind === meta.kind) {
-    return { status: "queued" }; // já enfileirado — idempotente
-  }
 
-  const op: PendingOp = {
+  await db.pendingOps.add({
     id: newId(),
     kind: meta.kind,
-    payload: { eventId: meta.eventId },
+    payload,
     status: "pending",
     createdAt: new Date().toISOString(),
-  };
-  await db.pendingOps.add(op);
+  });
   await applyLocal(meta, true);
-  await log("info", `Enfileirado: ${meta.kind} (${meta.eventId})`);
+  await log("info", `Enfileirado: ${meta.kind} (${key})`);
   return { status: "queued" };
 }
 
@@ -137,15 +199,35 @@ export function pendingCount(): Promise<number> {
 
 export type ProcessSummary = { done: number; conflict: number; failed: number };
 
-/** Heurística: a action sinalizou conflito de alocação? (reusa a msg do server) */
-function isConflictError(message: string): boolean {
-  return /escalad|conflit|sobrep/i.test(message);
+function runAction(op: PendingOp): Promise<QueueActionResult> {
+  const { eventId, personId, role, isCaptain, notes, force } = op.payload;
+  switch (op.kind) {
+    case "checkIn":
+      return checkIn(eventId);
+    case "undoCheckIn":
+      return undoCheckIn(eventId);
+    case "allocate":
+      return upsertAssignment({
+        eventId,
+        personId,
+        role: (role ?? "SUPPORTER") as AssignmentRole,
+        isCaptain: isCaptain ?? false,
+        notes: notes ?? "",
+        force: force ?? false,
+      });
+    case "deallocate":
+      return removeAssignment({ eventId, personId });
+  }
 }
 
-function runAction(op: PendingOp): Promise<QueueActionResult> {
-  return op.kind === "checkIn"
-    ? checkIn(op.payload.eventId)
-    : undoCheckIn(op.payload.eventId);
+/** Confirma no cache local o efeito de uma op recém-sincronizada. */
+async function confirmLocal(op: PendingOp): Promise<void> {
+  const { eventId, personId } = op.payload;
+  if (op.kind === "checkIn") {
+    await db.checkIns.update([eventId, personId], { pending: false });
+  } else if (op.kind === "allocate") {
+    await db.assignments.update([eventId, personId], { pending: false });
+  }
 }
 
 let processing = false;
@@ -153,12 +235,10 @@ let processing = false;
 /**
  * Drena a fila serialmente quando online. Cada item chama a action real:
  * - sucesso → `done` (remove da fila, confirma o cache local)
- * - conflito de alocação → `conflict` (mantém na fila + registra no servidor)
+ * - conflito (`result.conflict` setado) → `conflict` (mantém na fila + registra
+ *   no servidor, que avisa a diretoria)
  * - erro de validação → `failed` (mantém na fila pra retry/descartar)
  * Se a rede cair no meio, interrompe e deixa o resto pendente.
- *
- * Obs.: hoje a fila só cobre check-in (idempotente), então conflitos não
- * ocorrem na prática — o caminho fica pronto pra quando a fila cobrir alocação.
  */
 export async function processQueue(): Promise<ProcessSummary> {
   const summary: ProcessSummary = { done: 0, conflict: 0, failed: 0 };
@@ -181,28 +261,29 @@ export async function processQueue(): Promise<ProcessSummary> {
       }
 
       if (result.ok) {
-        if (op.kind === "checkIn") {
-          await db.checkIns
-            .where("eventId")
-            .equals(op.payload.eventId)
-            .modify({ pending: false });
-        }
+        await confirmLocal(op);
         await db.pendingOps.delete(op.id);
         summary.done++;
         await log("info", `Sincronizado: ${op.kind} (${op.payload.eventId})`);
       } else {
-        const status = isConflictError(result.error) ? "conflict" : "failed";
-        await db.pendingOps.update(op.id, { status, error: result.error });
+        const isConflict = Boolean(result.conflict);
+        const status = isConflict ? "conflict" : "failed";
+        await db.pendingOps.update(op.id, {
+          status,
+          conflict: result.conflict,
+          error: result.error,
+        });
         await logSyncOperation({
           kind: op.kind,
-          payload: op.payload,
+          payload: { ...op.payload },
           status,
+          conflict: result.conflict,
           error: result.error,
         }).catch(() => undefined);
-        if (status === "conflict") summary.conflict++;
+        if (isConflict) summary.conflict++;
         else summary.failed++;
         await log(
-          status === "conflict" ? "warn" : "error",
+          isConflict ? "warn" : "error",
           `${op.kind}: ${result.error}`,
         );
       }
@@ -216,7 +297,26 @@ export async function processQueue(): Promise<ProcessSummary> {
 
 /** Recoloca uma operação (conflict/failed) na fila e tenta processar. */
 export async function retryOp(id: string): Promise<ProcessSummary> {
-  await db.pendingOps.update(id, { status: "pending", error: "" });
+  await db.pendingOps.update(id, { status: "pending", conflict: undefined, error: "" });
+  return processQueue();
+}
+
+/**
+ * Resolve um conflito de "já alocada" sobrepondo (`force`) e reprocessa.
+ * Só faz sentido pra `allocate` com conflito `already-allocated`.
+ */
+export async function resolveOp(
+  id: string,
+  opts: { force?: boolean } = {},
+): Promise<ProcessSummary> {
+  const op = await db.pendingOps.get(id);
+  if (!op) return { done: 0, conflict: 0, failed: 0 };
+  await db.pendingOps.update(id, {
+    status: "pending",
+    conflict: undefined,
+    error: "",
+    payload: { ...op.payload, force: opts.force ?? op.payload.force },
+  });
   return processQueue();
 }
 
@@ -224,15 +324,16 @@ export async function retryOp(id: string): Promise<ProcessSummary> {
 export async function discardOp(id: string): Promise<void> {
   const op = await db.pendingOps.get(id);
   if (!op) return;
+  const { eventId, personId } = op.payload;
   if (op.kind === "checkIn") {
-    await db.checkIns
-      .where("eventId")
-      .equals(op.payload.eventId)
-      .and((c) => Boolean(c.pending))
-      .delete();
+    const row = await db.checkIns.get([eventId, personId]);
+    if (row?.pending) await db.checkIns.delete([eventId, personId]);
+  } else if (op.kind === "allocate") {
+    const row = await db.assignments.get([eventId, personId]);
+    if (row?.pending) await db.assignments.delete([eventId, personId]);
   }
   await db.pendingOps.delete(id);
-  await log("info", `Operação descartada: ${op.kind} (${op.payload.eventId})`);
+  await log("info", `Operação descartada: ${op.kind} (${eventId})`);
 }
 
 /** Atalho pro botão "Forçar sync agora" (C4). */

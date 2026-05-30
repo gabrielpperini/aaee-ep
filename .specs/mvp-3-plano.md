@@ -12,11 +12,22 @@ Três blocos:
 
 Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offline cobre os cenários de internet ruim no EP).
 
+> **Status (2026-05-30):** todas as tarefas A1–C4 estão **implementadas e cabeadas**.
+> Cada uma ganhou um marcador `✅ Feito` / `⚠️ Feito com ressalva` / `🔲 Pendente`.
+> Os DoDs que dependem de device real ou medição externa (Lighthouse, iOS Safari,
+> smoke offline) estão consolidados em [mvp-3-validacao.md](./mvp-3-validacao.md).
+
 ---
 
 ## A. Fundação PWA
 
 ### A1. Service worker base + detecção de standalone
+
+> ⚠️ **Feito com ressalva** — SW (`public/sw.js`), `useStandaloneMode()` e `/offline` existem.
+> Ressalva: o matcher do `proxy.ts` não exclui `/sw.js` nem `/offline` (só `manifest.webmanifest`),
+> então sem sessão eles redirecionam pra `/login`. Funciona pro usuário autenticado — que é o
+> único que chega no app — mas é frágil. Ver achado #1 da validação. DoD "Lighthouse PWA ≥ 80":
+> a categoria PWA foi removida do Lighthouse v12; instalabilidade verificada manualmente no lugar.
 
 **Objetivo:** SW registrado em produção; primitivos pra saber se o app está instalado.
 
@@ -32,6 +43,10 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 - Lighthouse PWA score ≥ 80
 
 ### A2. Modal de instalação pós-login
+
+> ✅ **Feito** — `<InstallPrompt />` montado no layout autenticado, suprimido em standalone,
+> captura `beforeinstallprompt`, instruções condicionais por SO, dismiss em `localStorage`,
+> link em `/perfil`. DoD de teste em Android/iOS/Desktop é manual (ver validação).
 
 **Objetivo:** Toda pessoa que loga e ainda não tem o app instalado vê um prompt pra instalar.
 
@@ -55,6 +70,9 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 ## B. Notificações push
 
 ### B1. VAPID + modelo PushSubscription
+
+> ✅ **Feito** — modelo `PushSubscription` migrado (`20260529212846_mvp3_push`), dep `web-push`,
+> actions de subscribe/unsubscribe, handlers `push` + `notificationclick` no SW.
 
 **Objetivo:** Backend pronto pra receber e armazenar subscriptions; SW pronto pra exibir notificações.
 
@@ -86,6 +104,9 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 
 ### B2. Onboarding de permissão pós-instalação
 
+> ✅ **Feito** — `<EnablePushPrompt />` montado no layout, gated por standalone +
+> `Notification.permission === "default"` + sem subscription; reuso em `/perfil`.
+
 **Objetivo:** Permissão de push só é pedida depois que o app foi instalado.
 
 **Entregas:**
@@ -102,6 +123,9 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 
 ### B3. Helper central de envio com cleanup de 410
 
+> ✅ **Feito** — `src/lib/push.ts` com `sendPushToUser`/`sendPushToUsers`, cleanup de 410/404,
+> `lastSeenAt` em sucesso, tipo `PushPayload`. `renotify` quando há `tag` (commit `588e0f9`).
+
 **Objetivo:** Toda futura origem de push usa uma função única que cuida de cleanup.
 
 **Entregas:**
@@ -117,6 +141,9 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 - Disparo dupla via `tag` substitui notificação anterior em vez de empilhar
 
 ### B4. Disparo: mudança de alocação
+
+> ✅ **Feito** — hooks em `upsertAssignment`/`removeAssignment` (`eventos/[id]/actions.ts`),
+> mensagens por caso (escalada/role/capitão/removida), tag por personId+eventId.
 
 **Objetivo:** Pessoa é notificada quando entra/sai/muda papel numa alocação.
 
@@ -136,6 +163,10 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 
 ### B5. Disparo: lembrete T-30min antes do evento
 
+> ✅ **Feito** — Vercel Cron `*/5 * * * *` (`vercel.json`) → `api/cron/event-reminders/route.ts`,
+> janela `[+25min, +35min]`, status confirmado e `timeTbd=false`, idempotência via
+> `Assignment.reminderSentAt`, proteção `Authorization: Bearer ${CRON_SECRET}`.
+
 **Objetivo:** Quem está escalado pra um evento recebe lembrete ~30min antes.
 
 **Entregas:**
@@ -151,6 +182,10 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 
 ### B6. Disparo manual: capitão chama torcida
 
+> ⚠️ **Feito, com desvio do plano** — `callSupporters` + `<CallSupportersButton />` no detalhe
+> do evento, permissão de capitão/manager. O **throttle de 5min foi removido** intencionalmente
+> (commit `e32fd94`) — a regra do plano não vale mais.
+
 **Objetivo:** Capitão tem um botão "Chamar torcida" no detalhe do evento que dispara push pra toda a torcida alocada.
 
 **Entregas:**
@@ -165,6 +200,12 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 - Pessoa não-capitão não vê o botão
 
 ### B7. Preferências e dispositivos em `/perfil`
+
+> ✅ **Feito** — modelo `NotificationPreference` migrado, `<notification-settings />` em `/perfil`
+> com switches por categoria + lista de dispositivos (parser de `userAgent`) com "Remover".
+> Cadeia de preferências **verificada por código**: `sendPushToUser` consulta
+> `NotificationPreference` via `categoryEnabled`, e os 3 disparos passam a `category` correta
+> (`allocation` B4, `captainCall` B6, `eventReminder` B5).
 
 **Objetivo:** Pessoa controla o que recebe e em quais dispositivos.
 
@@ -193,6 +234,10 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 
 ### C1. Dexie setup + cache de leitura
 
+> ✅ **Feito** — `src/lib/db/dexie.ts` (`events`, `assignments`, `checkIns`, `meta`, `pendingOps`,
+> `syncLog`), `<OfflineHydrator />` hidrata a partir de `loadHydrationData`, leituras em
+> `src/lib/db/reads.ts`. _Sem tabela `availability`: disponibilidade é read-only/derivada (MVP 2)._
+
 **Objetivo:** Dados que a pessoa usa offline ficam disponíveis sem rede.
 
 **Entregas:**
@@ -210,6 +255,12 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 - Idem pro detalhe de evento próprio
 
 ### C2. Fila de SyncOperation
+
+> ✅ **Feito** — modelo `SyncOperation` migrado, espelho local `pendingOps`, `enqueueOrRun`
+> com efeito otimista e **coalescência last-write-wins** por chave (família+evento+pessoa),
+> `pendingCount`, `<PendingSyncBadge />` no header. Wrapper aplicado a **check-in E alocação**
+> (`allocate`/`deallocate` via `allocation-panel.tsx`, com estado otimista local). Disponibilidade
+> é read-only (nada a enfileirar).
 
 **Objetivo:** Escritas offline ficam enfileiradas em vez de falhar.
 
@@ -239,6 +290,14 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 
 ### C3. Processamento da fila + resolução de conflitos
 
+> ✅ **Feito** — `<SyncProcessor />` ouve `online` + mensagem `sync-queue` do SW (Background Sync
+> com fallback). `processQueue` é serial: `done`/`conflict`/`failed`, com `resolveOp` (forçar),
+> `retryOp`/`discardOp` na UI de `/perfil`. Conflito agora é **sinal estruturado** (`ConflictKind`
+> em `ActionResult`, fim do regex em string) classificando `competing`/`athlete-here`/
+> `event-cancelled` (duros) vs `already-allocated` (forçável). Em conflito de alocação a diretoria
+> recebe push (categoria **`syncConflict`**, `lib/directors.ts` + `sync-actions.ts`). Exercitado em
+> `tests/e2e/event/offline-conflict.spec.ts`.
+
 **Objetivo:** Quando volta online, fila esvazia e conflitos ficam visíveis.
 
 **Entregas:**
@@ -256,6 +315,11 @@ Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offl
 - Cenário de conflito: alocação que sobrepõe vira `conflict` e aparece na UI
 
 ### C4. Polimento offline
+
+> ✅ **Feito** — `<OfflineBanner />` no header, `<OfflineUnsupportedNotice />` nas telas que não
+> funcionam offline (`/pessoas`, `/locais`, `/mapa`…), `forceSync` ("Forçar sync agora") e
+> `clearLocalCache` ("Limpar cache local") em `/perfil`, log de 50 eventos (`syncLog`).
+> DoD do smoke test em modo avião 10min é manual (ver validação).
 
 **Objetivo:** Casos comuns do EP cobertos.
 

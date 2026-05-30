@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Crown, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ASSIGNMENT_ROLE_LABELS, formatEventWhen } from "@/lib/format";
 import type { AssignmentRole } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
+import { enqueueOrRun } from "@/lib/db/sync-queue";
 import { removeAssignment, upsertAssignment } from "./actions";
 
 type AssignmentItem = {
@@ -75,7 +76,21 @@ export function AllocationPanel({
   const [busyPerson, setBusyPerson] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const filteredAvailable = available.filter((p) => {
+  // Estado otimista local: offline a action não revalida o servidor, então a
+  // UI tem que refletir a mudança na hora. Online, a revalidação do RSC traz
+  // props novas e o efeito abaixo reconcilia.
+  const [localAssignments, setLocalAssignments] = useState(assignments);
+  const [localAvailable, setLocalAvailable] = useState(available);
+
+  useEffect(() => {
+    setLocalAssignments(assignments);
+    setLocalAvailable(available);
+  }, [assignments, available]);
+
+  const byName = (a: { name: string }, b: { name: string }) =>
+    a.name.localeCompare(b.name, "pt-BR");
+
+  const filteredAvailable = localAvailable.filter((p) => {
     if (hideConflicts && (p.conflict || p.competingElsewhere)) return false;
     if (!search) return true;
     const haystack = `${p.name} ${p.nickname ?? ""}`.toLowerCase();
@@ -83,22 +98,54 @@ export function AllocationPanel({
   });
 
   function add(personId: string) {
-    const person = available.find((p) => p.id === personId);
+    const person = localAvailable.find((p) => p.id === personId);
+    if (!person) return;
     // Se a UI mostrou alerta de conflito, o usuário já viu — manda force.
-    const hasConflict = Boolean(person?.conflict);
+    const hasConflict = Boolean(person.conflict);
+    const prevAvailable = localAvailable;
+    const prevAssignments = localAssignments;
+
+    // Otimista: move pra escalados.
+    setLocalAvailable((list) => list.filter((p) => p.id !== personId));
+    setLocalAssignments((list) =>
+      [
+        ...list,
+        {
+          personId,
+          name: person.name,
+          nickname: person.nickname,
+          phone: person.phone,
+          role: "SUPPORTER" as AssignmentRole,
+          isCaptain: false,
+          notes: null,
+        },
+      ].sort(byName),
+    );
+
     setBusyPerson(personId);
     startTransition(async () => {
-      const result = await upsertAssignment({
-        eventId,
-        personId,
-        role: "SUPPORTER",
-        isCaptain: false,
-        notes: "",
-        force: hasConflict,
-      });
+      const r = await enqueueOrRun(
+        () =>
+          upsertAssignment({
+            eventId,
+            personId,
+            role: "SUPPORTER",
+            isCaptain: false,
+            notes: "",
+            force: hasConflict,
+          }),
+        { kind: "allocate", eventId, personId, role: "SUPPORTER", isCaptain: false, notes: "", force: hasConflict },
+      );
       setBusyPerson(null);
-      if (!result.ok) toast.error(result.error);
-      else toast.success("Pessoa escalada");
+      if (r.status === "error") {
+        setLocalAvailable(prevAvailable);
+        setLocalAssignments(prevAssignments);
+        toast.error(r.error);
+      } else if (r.status === "queued") {
+        toast.success("Escalação salva offline — sincroniza ao reconectar");
+      } else {
+        toast.success("Pessoa escalada");
+      }
     });
   }
 
@@ -108,33 +155,87 @@ export function AllocationPanel({
     isCaptain?: boolean;
     notes?: string;
   }) {
-    const current = assignments.find((a) => a.personId === input.personId);
+    const current = localAssignments.find((a) => a.personId === input.personId);
     if (!current) return;
+    const role = input.role ?? current.role;
+    const isCaptain = input.isCaptain ?? current.isCaptain;
+    const notes = input.notes ?? current.notes ?? "";
+    const prevAssignments = localAssignments;
+
+    setLocalAssignments((list) =>
+      list.map((a) =>
+        a.personId === input.personId ? { ...a, role, isCaptain, notes } : a,
+      ),
+    );
+
     setBusyPerson(input.personId);
     startTransition(async () => {
-      const result = await upsertAssignment({
-        eventId,
-        personId: input.personId,
-        role: input.role ?? current.role,
-        isCaptain: input.isCaptain ?? current.isCaptain,
-        notes: input.notes ?? current.notes ?? "",
-      });
+      const r = await enqueueOrRun(
+        () =>
+          upsertAssignment({
+            eventId,
+            personId: input.personId,
+            role,
+            isCaptain,
+            notes,
+            // Já está escalada aqui — alteração de papel não deve reabrir
+            // conflito de "já alocada em outro evento".
+            force: true,
+          }),
+        { kind: "allocate", eventId, personId: input.personId, role, isCaptain, notes, force: true },
+      );
       setBusyPerson(null);
-      if (!result.ok) toast.error(result.error);
+      if (r.status === "error") {
+        setLocalAssignments(prevAssignments);
+        toast.error(r.error);
+      } else if (r.status === "queued") {
+        toast.success("Alteração salva offline — sincroniza ao reconectar");
+      }
     });
   }
 
   function remove(personId: string) {
+    const current = localAssignments.find((a) => a.personId === personId);
+    if (!current) return;
+    const prevAvailable = localAvailable;
+    const prevAssignments = localAssignments;
+
+    // Otimista: volta pra disponíveis.
+    setLocalAssignments((list) => list.filter((a) => a.personId !== personId));
+    setLocalAvailable((list) =>
+      [
+        ...list,
+        {
+          id: personId,
+          name: current.name,
+          nickname: current.nickname,
+          phone: current.phone,
+          conflict: null,
+          competingElsewhere: null,
+        },
+      ].sort(byName),
+    );
+
     setBusyPerson(personId);
     startTransition(async () => {
-      const result = await removeAssignment({ eventId, personId });
+      const r = await enqueueOrRun(
+        () => removeAssignment({ eventId, personId }),
+        { kind: "deallocate", eventId, personId },
+      );
       setBusyPerson(null);
-      if (!result.ok) toast.error(result.error);
-      else toast.success("Pessoa removida da escala");
+      if (r.status === "error") {
+        setLocalAvailable(prevAvailable);
+        setLocalAssignments(prevAssignments);
+        toast.error(r.error);
+      } else if (r.status === "queued") {
+        toast.success("Remoção salva offline — sincroniza ao reconectar");
+      } else {
+        toast.success("Pessoa removida da escala");
+      }
     });
   }
 
-  const allocatedCount = assignments.length;
+  const allocatedCount = localAssignments.length;
   const shortBy = Math.max(0, desiredSupportersCount - allocatedCount);
 
   return (
@@ -231,13 +332,13 @@ export function AllocationPanel({
           Escalados ({allocatedCount}
           {desiredSupportersCount ? `/${desiredSupportersCount}` : ""})
         </p>
-        {assignments.length === 0 ? (
+        {localAssignments.length === 0 ? (
           <p className="rounded-md border border-dashed border-border bg-card/60 px-3 py-6 text-center text-xs text-muted-foreground">
             Comece pelo painel à esquerda.
           </p>
         ) : (
           <ul className="space-y-2">
-            {assignments.map((a) => (
+            {localAssignments.map((a) => (
               <li
                 key={a.personId}
                 className={cn(

@@ -9,10 +9,12 @@ import { useOnlineStatus } from "@/lib/hooks/use-online-status";
  * Espelha no Dexie os dados próprios da pessoa (eventos, alocações, check-ins)
  * a cada navegação autenticada enquanto online. Não renderiza nada.
  *
- * - `events`/`assignments` usam `bulkPut` (upsert, sem apagar) — o cache da
- *   agenda de outras telas não é tocado.
- * - `checkIns` confirmados do servidor são gravados, mas NÃO sobrescrevem
- *   check-ins ainda `pending` (otimistas) da fila offline (Bloco C2/C3).
+ * - `events` usa `bulkPut` (upsert, sem apagar) — o cache da agenda de outras
+ *   telas não é tocado.
+ * - `assignments` e `checkIns` confirmados do servidor são gravados, mas NÃO
+ *   sobrescrevem registros ainda `pending` (otimistas) da fila offline — senão
+ *   uma re-hidratação apagaria a alocação/check-in que o usuário acabou de
+ *   fazer offline antes dela sincronizar (Bloco C2/C3).
  */
 export function OfflineHydrator({ data }: { data: HydrationData }) {
   const online = useOnlineStatus();
@@ -31,7 +33,12 @@ export function OfflineHydrator({ data }: { data: HydrationData }) {
           db.meta,
           async () => {
             await db.events.bulkPut(data.events);
-            await db.assignments.bulkPut(data.assignments);
+
+            for (const a of data.assignments) {
+              const existing = await db.assignments.get([a.eventId, a.personId]);
+              if (existing?.pending) continue; // preserva otimista pendente
+              await db.assignments.put(a);
+            }
 
             for (const c of data.checkIns) {
               const existing = await db.checkIns.get([c.eventId, c.personId]);
