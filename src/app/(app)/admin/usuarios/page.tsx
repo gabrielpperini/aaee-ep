@@ -12,6 +12,7 @@ export default async function AdminUsersPage() {
     prisma.user.findMany({
       orderBy: { email: "asc" },
       include: {
+        _count: { select: { pushSubscriptions: true } },
         person: {
           select: {
             id: true,
@@ -52,6 +53,7 @@ export default async function AdminUsersPage() {
     email: u.email,
     phone: u.phone,
     role: u.role,
+    pushCount: u._count.pushSubscriptions,
     authName: u.authUserId ? nameByAuthId.get(u.authUserId) ?? null : null,
     person: u.person
       ? {

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { Bell, BellOff } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -66,6 +67,8 @@ export type UserRow = {
   email: string | null;
   phone: string | null;
   role: Role;
+  /** Nº de dispositivos com push inscrito — 0 = não recebe notificações. */
+  pushCount: number;
   /** Nome vindo do metadata do Supabase (usado quando não há Person). */
   authName: string | null;
   person: PersonData | null;
@@ -224,6 +227,28 @@ export function UsersTable({
         ),
       },
       {
+        id: "notifications",
+        accessorFn: (u) => (u.pushCount > 0 ? "Ativas" : "Inativas"),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Notificações" />
+        ),
+        filterFn: equalsAnyFilter,
+        cell: ({ row }) => {
+          const n = row.original.pushCount;
+          return n > 0 ? (
+            <Badge variant="secondary" className="gap-1 text-[10px]">
+              <Bell className="h-3 w-3" />
+              Ativas{n > 1 ? ` · ${n}` : ""}
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="gap-1 text-[10px] text-muted-foreground">
+              <BellOff className="h-3 w-3" />
+              Inativas
+            </Badge>
+          );
+        },
+      },
+      {
         id: "actions",
         header: () => null,
         cell: ({ row }) => (
@@ -261,6 +286,14 @@ export function UsersTable({
         columnId: "participation",
         title: "Participação",
         options: PARTICIPATION.map((p) => ({ label: p.label, value: p.label })),
+      },
+      {
+        columnId: "notifications",
+        title: "Notificações",
+        options: [
+          { label: "Ativas", value: "Ativas" },
+          { label: "Inativas", value: "Inativas" },
+        ],
       },
       {
         columnId: "modalities",
