@@ -85,6 +85,11 @@ export async function sendPushToUser(
               keys: { p256dh: sub.p256dh, auth: sub.auth },
             },
             body,
+            // urgency "high" → apns-priority 10 (Apple) / Urgency: high (FCM):
+            // entrega imediata. Sem isso o padrão "normal" deixa o iOS atrasar
+            // a notificação (até dezenas de segundos) pra poupar bateria.
+            // TTL curto: estes avisos são pontuais; não vale guardar por semanas.
+            { urgency: "high", TTL: 3600 },
           );
           sent += 1;
           await prisma.pushSubscription.update({
