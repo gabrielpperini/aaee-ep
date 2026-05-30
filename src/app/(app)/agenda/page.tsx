@@ -53,7 +53,7 @@ export default async function AgendaPage({
         actions={
           <div className="flex flex-wrap gap-1.5">
             <DayChip day={null} active={selectedDay === undefined} />
-            {[-1, 0, 1, 2, 3, 4].map((d) => (
+            {[0, 1, 2, 3, 4].map((d) => (
               <DayChip key={d} day={d} active={selectedDay === d} />
             ))}
           </div>
