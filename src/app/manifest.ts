@@ -28,15 +28,29 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: NAVY,
     lang: "pt-BR",
     icons: [
+      // Tamanhos explícitos e quadrados: macOS/Chrome ignoram PNG com
+      // sizes:"any" (isso vale só pra SVG) e caem no ícone genérico.
       {
-        src: "/icon.png",
-        sizes: "any",
+        src: "/icons/icon-192.png",
+        sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/apple-icon.png",
-        sizes: "any",
+        src: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-1024.png",
+        sizes: "1024x1024",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-maskable-512.png",
+        sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
       },

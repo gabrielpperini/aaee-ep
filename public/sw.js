@@ -7,7 +7,7 @@
 //
 // Push e notificationclick: ver fim do arquivo (MVP 3 / B1).
 
-const VERSION = "v4";
+const VERSION = "v5";
 const STATIC_CACHE = `static-${VERSION}`;
 const PAGES_CACHE = `pages-${VERSION}`;
 const OFFLINE_URL = "/offline";
