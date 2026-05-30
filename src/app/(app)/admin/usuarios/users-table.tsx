@@ -18,7 +18,6 @@ import { COURSE_LABELS } from "@/lib/format";
 import type { Role, Course } from "@/generated/prisma/client";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { UserRowActions } from "./row-actions";
-import { CreatePersonButton } from "./create-person-button";
 
 const ROLE_LABEL: Record<Role, string> = {
   USER: "Membro",
@@ -61,6 +60,8 @@ export type UserRow = {
   email: string | null;
   phone: string | null;
   role: Role;
+  /** Nome vindo do metadata do Supabase (usado quando não há Person). */
+  authName: string | null;
   person: PersonData | null;
 };
 
@@ -151,11 +152,11 @@ export function UsersTable({
                           )}
                         </Link>
                       ) : (
-                        <div className="flex flex-col items-start gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span>{u.authName || u.email || "—"}</span>
                           <Badge variant="destructive" className="text-[10px]">
-                            Sem pessoa vinculada
+                            Sem pessoa
                           </Badge>
-                          <CreatePersonButton userId={u.id} />
                         </div>
                       )}
                     </TableCell>

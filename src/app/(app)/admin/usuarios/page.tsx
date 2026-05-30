@@ -40,11 +40,19 @@ export default async function AdminUsersPage() {
     }),
   ]);
 
+  // Nome que veio do Supabase (metadata do login — ex: Google), usado quando
+  // a conta ainda não tem Person vinculada.
+  const authRows = await prisma.$queryRawUnsafe<{ id: string; name: string | null }[]>(
+    `SELECT id, COALESCE(raw_user_meta_data->>'name', raw_user_meta_data->>'full_name') AS name FROM auth.users`,
+  );
+  const nameByAuthId = new Map(authRows.map((r) => [r.id, r.name]));
+
   const userRows = users.map((u) => ({
     id: u.id,
     email: u.email,
     phone: u.phone,
     role: u.role,
+    authName: u.authUserId ? nameByAuthId.get(u.authUserId) ?? null : null,
     person: u.person
       ? {
           ...u.person,

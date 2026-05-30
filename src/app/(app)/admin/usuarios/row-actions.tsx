@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Role } from "@/generated/prisma/client";
 import { UserEditDialog } from "./user-edit-dialog";
+import { createPersonFromUser } from "./actions";
 
 type PersonOption = {
   id: string;
@@ -31,6 +33,15 @@ type Props = {
 
 export function UserRowActions({ user, unlinkedPersons }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  const handleCreatePerson = () => {
+    startTransition(async () => {
+      const r = await createPersonFromUser(user.id);
+      if (r.status === "error") toast.error(r.formError ?? "Não foi possível criar.");
+      else toast.success("Pessoa criada com os dados do login.");
+    });
+  };
 
   return (
     <>
@@ -42,6 +53,11 @@ export function UserRowActions({ user, unlinkedPersons }: Props) {
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             Editar
           </DropdownMenuItem>
+          {!user.person && (
+            <DropdownMenuItem onClick={handleCreatePerson} disabled={pending}>
+              {pending ? "Criando…" : "Criar pessoa do login"}
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <UserEditDialog
