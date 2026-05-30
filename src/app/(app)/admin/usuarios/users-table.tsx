@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import * as React from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -14,6 +13,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DataTable,
+  DataTableColumnHeader,
+  arrayOverlapFilter,
+  equalsAnyFilter,
+  type FacetConfig,
+} from "@/components/ui/data-table";
 import { COURSE_LABELS } from "@/lib/format";
 import type { Role, Course } from "@/generated/prisma/client";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
@@ -73,6 +79,10 @@ export type UnlinkedPerson = {
   phone: string | null;
 };
 
+function participationLabels(p: PersonData): string[] {
+  return PARTICIPATION.filter((x) => p[x.key]).map((x) => x.label);
+}
+
 export function UsersTable({
   users,
   unlinkedPersons,
@@ -80,147 +90,213 @@ export function UsersTable({
   users: UserRow[];
   unlinkedPersons: UnlinkedPerson[];
 }) {
-  const [q, setQ] = useState("");
+  const columns = React.useMemo<ColumnDef<UserRow>[]>(
+    () => [
+      {
+        id: "name",
+        accessorFn: (u) => u.person?.name ?? u.authName ?? u.email ?? "",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Nome / Apelido" />
+        ),
+        cell: ({ row }) => {
+          const u = row.original;
+          return u.person ? (
+            <Link href="/pessoas" className="font-medium hover:underline">
+              {u.person.name}
+              {u.person.nickname && (
+                <span className="text-muted-foreground"> ({u.person.nickname})</span>
+              )}
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 font-medium">
+              <span>{u.authName || u.email || "—"}</span>
+              <Badge variant="destructive" className="text-[10px]">
+                Sem pessoa
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "email",
+        accessorFn: (u) => u.person?.email ?? u.email ?? "",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Email" />
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.person?.email || row.original.email || "—"}
+          </span>
+        ),
+      },
+      {
+        id: "phone",
+        accessorFn: (u) => u.person?.phone ?? u.phone ?? "",
+        header: () => "Telefone",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const phone = row.original.person?.phone || row.original.phone;
+          return (
+            <div className="flex items-center gap-1.5 text-muted-foreground tabular-nums">
+              <span>{phone || "—"}</span>
+              {phone && <WhatsAppButton phone={phone} size="icon-xs" />}
+            </div>
+          );
+        },
+      },
+      {
+        id: "course",
+        accessorFn: (u) => (u.person?.course ? COURSE_LABELS[u.person.course] : ""),
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Curso / Sem." />
+        ),
+        cell: ({ row }) => {
+          const p = row.original.person;
+          return (
+            <span className="text-sm whitespace-nowrap text-muted-foreground">
+              {p?.course ? COURSE_LABELS[p.course] : "—"}
+              {p?.semester && (
+                <span className="text-muted-foreground/70"> · {p.semester}º</span>
+              )}
+            </span>
+          );
+        },
+      },
+      {
+        id: "participation",
+        accessorFn: (u) => (u.person ? participationLabels(u.person) : []),
+        header: () => "Participação",
+        enableSorting: false,
+        filterFn: arrayOverlapFilter,
+        cell: ({ row }) => {
+          const tags = row.original.person
+            ? participationLabels(row.original.person)
+            : [];
+          return (
+            <div className="flex flex-wrap gap-1">
+              {tags.length === 0 ? (
+                <span className="text-xs text-muted-foreground">—</span>
+              ) : (
+                tags.map((t) => (
+                  <Badge key={t} variant="secondary" className="text-[10px]">
+                    {t}
+                  </Badge>
+                ))
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "modalities",
+        accessorFn: (u) => u.person?.modalities.map((m) => m.id) ?? [],
+        header: () => "Modalidades",
+        enableSorting: false,
+        filterFn: arrayOverlapFilter,
+        cell: ({ row }) => {
+          const mods = row.original.person?.modalities ?? [];
+          return (
+            <div className="flex flex-wrap gap-1">
+              {mods.length === 0 ? (
+                <span className="text-xs text-muted-foreground">—</span>
+              ) : (
+                mods.map((m) => (
+                  <Badge key={m.id} variant="outline" className="text-[10px]">
+                    {m.name}
+                  </Badge>
+                ))
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "role",
+        accessorFn: (u) => u.role,
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Função" />
+        ),
+        filterFn: equalsAnyFilter,
+        cell: ({ row }) => (
+          <Badge variant={ROLE_VARIANT[row.original.role]}>
+            {ROLE_LABEL[row.original.role]}
+          </Badge>
+        ),
+      },
+      {
+        id: "actions",
+        header: () => null,
+        cell: ({ row }) => (
+          <UserRowActions
+            user={{
+              id: row.original.id,
+              email: row.original.email,
+              role: row.original.role,
+              person: row.original.person,
+            }}
+            unlinkedPersons={unlinkedPersons}
+          />
+        ),
+        meta: { headClassName: "w-12" },
+      },
+    ],
+    [unlinkedPersons],
+  );
 
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return users;
-    return users.filter((u) => {
-      const hay = [
-        u.email ?? "",
-        u.phone ?? "",
-        u.person?.name ?? "",
-        u.person?.nickname ?? "",
-        u.person?.email ?? "",
-        u.person?.phone ?? "",
-        u.person?.modalities.map((m) => m.name).join(" ") ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(needle);
-    });
-  }, [q, users]);
+  const facets = React.useMemo<FacetConfig[]>(() => {
+    const modalityMap = new Map<string, string>();
+    for (const u of users) {
+      for (const m of u.person?.modalities ?? []) modalityMap.set(m.id, m.name);
+    }
+    return [
+      {
+        columnId: "role",
+        title: "Função",
+        options: (Object.keys(ROLE_LABEL) as Role[]).map((r) => ({
+          label: ROLE_LABEL[r],
+          value: r,
+        })),
+      },
+      {
+        columnId: "participation",
+        title: "Participação",
+        options: PARTICIPATION.map((p) => ({ label: p.label, value: p.label })),
+      },
+      {
+        columnId: "modalities",
+        title: "Modalidade",
+        options: Array.from(modalityMap, ([value, label]) => ({ label, value })).sort(
+          (a, b) => a.label.localeCompare(b.label, "pt-BR"),
+        ),
+      },
+    ];
+  }, [users]);
 
   return (
-    <div className="space-y-4">
-      <div className="relative max-w-sm">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar por email, telefone ou nome…"
-          className="pl-8"
-          aria-label="Buscar usuários"
-        />
-      </div>
-
-      <Card className="overflow-x-auto p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome / Apelido</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Telefone</TableHead>
-              <TableHead>Curso / Sem.</TableHead>
-              <TableHead>Participação</TableHead>
-              <TableHead>Modalidades</TableHead>
-              <TableHead>Função</TableHead>
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
-                  Nenhum usuário encontrado.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((u) => {
-                const tags = u.person
-                  ? PARTICIPATION.filter((p) => u.person![p.key]).map((p) => p.label)
-                  : [];
-                const phone = u.person?.phone || u.phone;
-                return (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">
-                      {u.person ? (
-                        <Link href="/pessoas" className="hover:underline">
-                          {u.person.name}
-                          {u.person.nickname && (
-                            <span className="text-muted-foreground"> ({u.person.nickname})</span>
-                          )}
-                        </Link>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>{u.authName || u.email || "—"}</span>
-                          <Badge variant="destructive" className="text-[10px]">
-                            Sem pessoa
-                          </Badge>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {u.person?.email || u.email || "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">
-                      <div className="flex items-center gap-1.5">
-                        <span>{phone || "—"}</span>
-                        {phone && <WhatsAppButton phone={phone} size="icon-xs" />}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
-                      {u.person?.course ? COURSE_LABELS[u.person.course] : "—"}
-                      {u.person?.semester && (
-                        <span className="text-muted-foreground/70"> · {u.person.semester}º</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {tags.length === 0 ? (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        ) : (
-                          tags.map((t) => (
-                            <Badge key={t} variant="secondary" className="text-[10px]">
-                              {t}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {!u.person || u.person.modalities.length === 0 ? (
-                          <span className="text-muted-foreground text-xs">—</span>
-                        ) : (
-                          u.person.modalities.map((m) => (
-                            <Badge key={m.id} variant="outline" className="text-[10px]">
-                              {m.name}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={ROLE_VARIANT[u.role]}>{ROLE_LABEL[u.role]}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <UserRowActions
-                        user={{ id: u.id, email: u.email, role: u.role, person: u.person }}
-                        unlinkedPersons={unlinkedPersons}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+    <div className="space-y-6">
+      <DataTable
+        columns={columns}
+        data={users}
+        searchAccessor={(u) =>
+          [
+            u.email ?? "",
+            u.phone ?? "",
+            u.person?.name ?? "",
+            u.person?.nickname ?? "",
+            u.person?.email ?? "",
+            u.person?.phone ?? "",
+            u.person?.modalities.map((m) => m.name).join(" ") ?? "",
+          ].join(" ")
+        }
+        searchPlaceholder="Buscar por email, telefone ou nome…"
+        facets={facets}
+        initialSorting={[{ id: "email", desc: false }]}
+        emptyMessage="Nenhum usuário encontrado."
+      />
 
       {unlinkedPersons.length > 0 && (
         <section>
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <p className="mb-2 text-[10px] font-semibold tracking-[0.22em] text-muted-foreground uppercase">
             Pessoas sem login vinculado ({unlinkedPersons.length})
           </p>
           <Card className="overflow-hidden p-0">
