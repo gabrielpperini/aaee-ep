@@ -29,6 +29,8 @@ test.describe("Locais — CRUD", () => {
 
     await expect(inTable(asDirector).getByText("Quadra Coberta")).toBeVisible();
     await expect(inTable(asDirector).getByText("Quadra da Música")).not.toBeVisible();
+    // Garante que o dialog de edição fechou (seu overlay bloquearia o menu).
+    await expect(asDirector.getByRole("dialog")).toHaveCount(0);
 
     // ---- delete
     await asDirector.getByRole("button", { name: "Ações para Quadra Coberta" }).click();

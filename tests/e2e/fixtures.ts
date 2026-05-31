@@ -20,6 +20,15 @@ type Fixtures = {
 
 async function authedPage(browser: import("@playwright/test").Browser, key: PersonaKey): Promise<Page> {
   const ctx = await browser.newContext({ storageState: storageStatePath(key) });
+  // Suprime o modal <InstallPrompt /> (abre 1200ms pós-login e seu overlay
+  // bloqueia cliques nos fluxos mais longos). Nenhum teste depende dele.
+  await ctx.addInitScript(() => {
+    try {
+      window.localStorage.setItem("install-prompt-dismissed-v1", "1");
+    } catch {
+      // sem storage — ignora
+    }
+  });
   return ctx.newPage();
 }
 

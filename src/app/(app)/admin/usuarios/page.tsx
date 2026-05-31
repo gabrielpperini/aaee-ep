@@ -42,11 +42,18 @@ export default async function AdminUsersPage() {
   ]);
 
   // Nome que veio do Supabase (metadata do login — ex: Google), usado quando
-  // a conta ainda não tem Person vinculada.
-  const authRows = await prisma.$queryRawUnsafe<{ id: string; name: string | null }[]>(
-    `SELECT id, COALESCE(raw_user_meta_data->>'name', raw_user_meta_data->>'full_name') AS name FROM auth.users`,
-  );
-  const nameByAuthId = new Map(authRows.map((r) => [r.id, r.name]));
+  // a conta ainda não tem Person vinculada. `auth.users` é um schema do próprio
+  // Supabase — em ambientes sem ele (ex: Postgres de teste/CI), a query falha;
+  // tratamos como "sem nome" em vez de derrubar a página inteira.
+  let nameByAuthId = new Map<string, string | null>();
+  try {
+    const authRows = await prisma.$queryRawUnsafe<{ id: string; name: string | null }[]>(
+      `SELECT id, COALESCE(raw_user_meta_data->>'name', raw_user_meta_data->>'full_name') AS name FROM auth.users`,
+    );
+    nameByAuthId = new Map(authRows.map((r) => [r.id, r.name]));
+  } catch {
+    // auth.users indisponível — segue sem os nomes de metadata.
+  }
 
   const userRows = users.map((u) => ({
     id: u.id,
