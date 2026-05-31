@@ -106,6 +106,7 @@ model User {
   pushSubscriptions      PushSubscription[]
   notificationPreference NotificationPreference?
   syncOperations         SyncOperation[]
+  broadcasts             Broadcast[]
 
   @@index([authUserId])
 }
@@ -321,6 +322,27 @@ model NotificationPreference {
   syncConflict  Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Aviso geral disparado manualmente pela diretoria (broadcast push).
+/// Diferente dos gatilhos automáticos: é um envio único, sem `category`
+/// (ignora NotificationPreference — aviso oficial sempre chega).
+model Broadcast {
+  id             String   @id @default(cuid())
+  sentById       String? // User.id de quem enviou (SetNull se a conta for removida)
+  title          String
+  body           String
+  url            String?
+  toEveryone     Boolean  @default(false)
+  modalityIds    String[] // modalidades-alvo (vazio se toEveryone)
+  eventIds       String[] // eventos-alvo (vazio se toEveryone)
+  recipientCount Int // pessoas (userIds) resolvidas no momento do envio
+  sentCount      Int // dispositivos que aceitaram o push (sendPushToUsers.sent)
+  createdAt      DateTime @default(now())
+
+  sentBy User? @relation(fields: [sentById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
 }
 
 // ============================================================

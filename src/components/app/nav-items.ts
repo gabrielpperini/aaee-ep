@@ -10,6 +10,7 @@ import {
   Gauge,
   Clock,
   CalendarRange,
+  Bell,
 } from "lucide-react";
 import type { Role } from "@/generated/prisma/client";
 
@@ -33,6 +34,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/modalidades", label: "Modalidades", icon: Trophy, minRole: "DIRECTOR", group: "manage" },
   { href: "/locais", label: "Locais", icon: MapPin, minRole: "DIRECTOR", group: "manage" },
   { href: "/admin/ep", label: "Edição do EP", icon: CalendarRange, minRole: "DIRECTOR", group: "admin" },
+  { href: "/admin/notificacoes", label: "Notificações", icon: Bell, minRole: "DIRECTOR", group: "admin" },
   { href: "/admin/usuarios", label: "Usuários", icon: Shield, minRole: "ADMIN", group: "admin" },
 ];
 
