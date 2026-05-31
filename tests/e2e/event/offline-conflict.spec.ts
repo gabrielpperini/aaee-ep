@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "../fixtures";
+import { test, expect } from "../fixtures";
+import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ reseed }) => {
   await reseed();
@@ -46,6 +47,9 @@ test.describe("Sincronização offline — conflito de escalação", () => {
     await expect(page.getByText("Conflito").first()).toBeVisible();
     await expect(page.getByText(/competindo/i).first()).toBeVisible();
     // Conflito duro (competindo) não é forçável — só "Tentar"/"Descartar".
-    await expect(page.getByRole("button", { name: "Forçar" })).toHaveCount(0);
+    // `exact` pra não casar com o botão "Forçar sync agora" do cabeçalho.
+    await expect(
+      page.getByRole("button", { name: "Forçar", exact: true }),
+    ).toHaveCount(0);
   });
 });
