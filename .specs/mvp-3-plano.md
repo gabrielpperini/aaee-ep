@@ -12,10 +12,10 @@ Três blocos:
 
 Ordem recomendada: A → B → C (push tem mais valor imediato pra torcida; offline cobre os cenários de internet ruim no EP).
 
-> **Status (2026-05-30):** todas as tarefas A1–C4 estão **implementadas e cabeadas**.
-> Cada uma ganhou um marcador `✅ Feito` / `⚠️ Feito com ressalva` / `🔲 Pendente`.
-> Os DoDs que dependem de device real ou medição externa (Lighthouse, iOS Safari,
-> smoke offline) estão consolidados em [mvp-3-validacao.md](./mvp-3-validacao.md).
+> **Status (2026-05-31):** MVP 3 **concluído e validado**. Todas as tarefas A1–C4 estão
+> implementadas e cabeadas (marcador `✅ Feito` / `⚠️ Feito com ressalva` em cada uma), a
+> suíte E2E passa (89/89) e os DoDs de device real / medição externa (Lighthouse, iOS Safari,
+> smoke offline, cron) foram validados em campo — ver [mvp-3-validacao.md](./mvp-3-validacao.md).
 
 ---
 

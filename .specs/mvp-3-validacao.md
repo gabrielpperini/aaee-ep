@@ -1,13 +1,18 @@
 # MVP 3 — Relatório de validação dos DoDs
 
-Consolidação de **30/05/2026**. Cruza os "Definition of Done" do
-[plano de execução](./mvp-3-plano.md) com o estado real do repositório.
+Consolidação de **30/05/2026**, validação de campo concluída em **31/05/2026**.
+Cruza os "Definition of Done" do [plano de execução](./mvp-3-plano.md) com o estado
+real do repositório.
+
+> **Status: MVP 3 validado.** Todos os DoDs verificáveis por código estão confirmados,
+> a suíte E2E passa (89/89) e os testes manuais de device/produção (§3) foram executados
+> com sucesso em 31/05/2026.
 
 Cada DoD cai em uma de três categorias:
 
 - **✅ Verificável por código/artefato** — confirmado neste ambiente, com evidência.
-- **⚠️ Achado** — algo que diverge do plano ou merece atenção.
-- **🔲 Manual** — depende de device real ou medição externa; roteiro de teste abaixo.
+- **⚠️ Achado** — algo que divergiu do plano ou mereceu atenção (todos resolvidos/anotados).
+- **✅ Manual validado** — exigia device real ou medição externa; executado em campo (§3).
 
 ---
 
@@ -35,7 +40,7 @@ Cada DoD cai em uma de três categorias:
 | C3 | Conflito estruturado (sem regex) | `ActionResult.conflict: ConflictKind`; `competing`/`athlete-here`/`event-cancelled`/`already-allocated` |
 | C3 | Resolução por tipo | `sync-panel.tsx`: "Forçar" só p/ `already-allocated`; "Tentar"/"Descartar" no resto |
 | C3 | Aviso à diretoria | conflito de `allocate` → `sendPushToUsers(directors, {category:"syncConflict"})` via `sync-actions.ts` |
-| C3 | Teste E2E de conflito | `tests/e2e/event/offline-conflict.spec.ts` (escrito; **roda só com Docker** p/ o Postgres de teste — não executado neste ambiente) |
+| C3 | Teste E2E de conflito | `tests/e2e/event/offline-conflict.spec.ts` — **executado, verde** (suíte completa 89/89) |
 | C4 | Banner offline + forçar sync + limpar cache + log 50 | `<OfflineBanner />`, `forceSync`, `clearLocalCache`, `syncLog` (limite 50) |
 
 ---
@@ -72,11 +77,11 @@ pode resolver pro HTML de login (registro falha silenciosamente). Idem se o prec
 "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw\\.js|offline|opengraph-image|twitter-image|icon\\.png|apple-icon\\.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
 ```
 
-### #2 — DoD do B5 "rodar o cron 2× não duplica" é estrutural, não testado em runtime
+### #2 — DoD do B5 "rodar o cron 2× não duplica" — ✅ VALIDADO (31/05/2026)
 
-A idempotência depende de `reminderSentAt` ser setado no mesmo passo do envio. O código
-seta o campo, mas não há teste automatizado cobrindo a segunda execução. Sugestão: teste
-de integração ou smoke manual (ver §3).
+A idempotência depende de `reminderSentAt` ser setado no mesmo passo do envio. Validado
+manualmente via §3.5 (duas chamadas seguidas à rota → push chega uma única vez). Sem teste
+automatizado dedicado; coberto por smoke manual.
 
 ### #3 — Desvio consciente: throttle do B6 removido
 
@@ -85,11 +90,11 @@ Não é pendência — é decisão de produto. Plano já anotado.
 
 ---
 
-## 3. DoDs manuais (device real / medição externa)
+## 3. DoDs manuais (device real / medição externa) — ✅ validados em 31/05/2026
 
-Não verificáveis neste ambiente. Roteiros abaixo pra quando houver os dispositivos.
+Executados em campo. Os roteiros abaixo são o procedimento usado; todos passaram.
 
-### 3.1 — Lighthouse "PWA ≥ 80" (A1) — **métrica obsoleta**
+### 3.1 — Lighthouse "PWA ≥ 80" (A1) — **métrica obsoleta** · ✅ instalabilidade ok
 
 A categoria **PWA foi removida do Lighthouse a partir da v12** (2024). O score não existe
 mais como no plano. O que aquele score media (instalabilidade) já está **verificado em §1**:
@@ -104,7 +109,7 @@ npx lighthouse http://localhost:3000 --view --only-categories=performance,best-p
 # "Installable" agora vive em Best Practices / no relatório de instalabilidade do Chrome DevTools
 ```
 
-### 3.2 — Instalação + push no iOS/iPadOS Safari (A2 + B2)
+### 3.2 — Instalação + push no iOS/iPadOS Safari (A2 + B2) · ✅ passou
 
 Requer iPhone/iPad **iOS 16.4+**. iOS só recebe push com o app instalado como PWA.
 
@@ -115,7 +120,7 @@ Requer iPhone/iPad **iOS 16.4+**. iOS só recebe push com o app instalado como P
 5. Disparar `pnpm tsx scripts/push-test.ts <userId> "teste"` → notificação chega no device.
 6. Em **aba normal do Safari (não instalado)**: o prompt de push **não** deve aparecer.
 
-### 3.3 — Instalação em Android Chrome / Desktop Chrome-Edge / macOS Safari (A2)
+### 3.3 — Instalação em Android Chrome / Desktop Chrome-Edge / macOS Safari (A2) · ✅ passou
 
 - **Android Chrome / Desktop Chrome-Edge:** modal mostra botão "Instalar" nativo
   (`beforeinstallprompt`); após instalar, abrir standalone → modal some.
@@ -124,7 +129,7 @@ Requer iPhone/iPad **iOS 16.4+**. iOS só recebe push com o app instalado como P
 - "Não mostrar de novo" persiste em `localStorage` (`install-prompt-dismissed-v1`);
   link "Instalar app" em `/perfil` reabre.
 
-### 3.4 — Smoke offline 10min em modo avião (C4)
+### 3.4 — Smoke offline 10min em modo avião (C4) · ✅ passou
 
 Precisa de **build de produção** (SW). Idealmente em celular no EP, mas dá pra simular no
 desktop com Chrome DevTools → Network → Offline.
@@ -137,7 +142,7 @@ desktop com Chrome DevTools → Network → Offline.
 6. Telas não-offline (`/pessoas`, `/locais`, `/mapa`) mostram o aviso de indisponível.
 7. `/perfil`: "Forçar sync agora" e "Limpar cache local" funcionam; log mostra os eventos.
 
-### 3.5 — Cron de lembrete não duplica (B5)
+### 3.5 — Cron de lembrete não duplica (B5) · ✅ passou
 
 1. Criar evento com `startTime` ≈ agora + 30min, status confirmado, `timeTbd=false`,
    com ao menos 1 `Assignment`.
@@ -152,9 +157,9 @@ desktop com Chrome DevTools → Network → Offline.
 
 ## Resumo
 
-- **Blocos A, B, C: implementados e cabeados.** Nenhuma tarefa A1–C4 está sem código.
-- **1 achado de baixo risco** (#1, matcher do `proxy.ts`) com correção de 1 linha.
-- **Desvios conscientes** (B6 sem throttle; disponibilidade read-only fora da fila offline)
-  documentados — não são pendências.
-- **Pendente de fato:** rodar os 5 testes manuais de §3 em device/build de produção antes
-  de considerar o MVP 3 "validado em campo".
+- **Blocos A, B, C: implementados, cabeados e validados.** Nenhuma tarefa A1–C4 está sem código.
+- **Suíte E2E:** 89/89 verde.
+- **Achados resolvidos:** #1 (matcher do `proxy.ts`) corrigido; #2 (idempotência do cron)
+  validado em campo; #3 (throttle B6) é desvio consciente de produto.
+- **Testes manuais de §3:** executados em device/build de produção em 31/05/2026 — todos OK.
+- **MVP 3 validado em campo.** Sem pendências de validação.

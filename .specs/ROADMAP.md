@@ -99,9 +99,10 @@ Documento de planejamento das fases de entrega. O documento de requisitos comple
 
 **Objetivo:** Tornar o app utilizável durante o evento mesmo com internet ruim, e avisar a pessoa quando algo relevante muda (próximo evento, mudança de alocação, capitão chamando torcida).
 
-> **Status (2026-05-30):** os três blocos do [plano de execução](./mvp-3-plano.md) (A/B/C)
-> estão implementados e cabeados em produção. O que falta é validação manual em
-> dispositivo real — ver [relatório de validação](./mvp-3-validacao.md).
+> **Status (2026-05-31):** MVP 3 **concluído e validado**. Os três blocos do
+> [plano de execução](./mvp-3-plano.md) (A/B/C) estão implementados e cabeados em produção,
+> a suíte E2E passa (89/89) e a validação de campo (device real + build de produção) foi
+> concluída — ver [relatório de validação](./mvp-3-validacao.md).
 
 ### Entregas
 
