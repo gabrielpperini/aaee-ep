@@ -338,6 +338,7 @@ model Broadcast {
   eventIds       String[] // eventos-alvo (vazio se toEveryone)
   recipientCount Int // pessoas (userIds) resolvidas no momento do envio
   sentCount      Int // dispositivos que aceitaram o push (sendPushToUsers.sent)
+  whatsappSentCount Int @default(0) // mensagens WhatsApp aceitas (sendPushToUsers.whatsappSent)
   createdAt      DateTime @default(now())
 
   sentBy User? @relation(fields: [sentById], references: [id], onDelete: SetNull)

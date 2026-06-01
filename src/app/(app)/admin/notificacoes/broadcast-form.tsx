@@ -67,16 +67,20 @@ export function BroadcastForm({ modalityOptions, eventOptions }: Props) {
   const { onSubmit, pending } = useFormAction(sendBroadcast, form, {
     onSuccess: (data) => {
       const d = data as
-        | { recipientCount: number; sentCount: number }
+        | {
+            recipientCount: number;
+            sentCount: number;
+            whatsappSentCount: number;
+          }
         | undefined;
       setConfirmOpen(false);
-      if (d && d.sentCount === 0) {
+      if (d && d.sentCount === 0 && d.whatsappSentCount === 0) {
         toast.info(
-          `Aviso registrado, mas ninguém com push ativo recebeu (${d.recipientCount} pessoa(s) no público).`,
+          `Aviso registrado, mas ninguém recebeu (${d.recipientCount} pessoa(s) no público).`,
         );
       } else if (d) {
         toast.success(
-          `Enviado para ${d.sentCount} dispositivo(s) de ${d.recipientCount} pessoa(s).`,
+          `Enviado para ${d.recipientCount} pessoa(s) · push: ${d.sentCount} dispositivo(s) · WhatsApp: ${d.whatsappSentCount}.`,
         );
       }
       form.reset(DEFAULTS);

@@ -2,6 +2,7 @@ import "server-only";
 
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
+import { sendWhatsAppText, sendWhatsAppTextBatch } from "@/lib/whatsapp";
 
 /**
  * Categorias de notificação. Mapeiam 1:1 com os campos de
@@ -50,13 +51,32 @@ async function categoryEnabled(
   return pref[category];
 }
 
+/** Resolve o telefone de um usuário (Person.phone tem prioridade sobre User.phone). */
+async function resolveUserPhone(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { phone: true, person: { select: { phone: true } } },
+  });
+  if (!user) return null;
+  return user.person?.phone ?? user.phone;
+}
+
+/** Resolve os telefones de vários usuários numa única query. */
+async function resolveUserPhones(userIds: string[]): Promise<(string | null)[]> {
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { phone: true, person: { select: { phone: true } } },
+  });
+  return users.map((u) => u.person?.phone ?? u.phone);
+}
+
 /**
  * Envia push pra todos os dispositivos de um usuário.
  * - Respeita `NotificationPreference` quando `payload.category` é passada.
  * - Limpa subscriptions inválidas (HTTP 410/404).
  * - Best-effort: NUNCA lança — push é complementar à UI in-app.
  */
-export async function sendPushToUser(
+async function pushOnlyToUser(
   userId: string,
   payload: PushPayload,
 ): Promise<{ sent: number; cleaned: number }> {
@@ -118,18 +138,67 @@ export async function sendPushToUser(
   return { sent, cleaned };
 }
 
-/** Envia o mesmo payload pra vários usuários (dedup). */
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
+/** Link relativo (ex: "/agenda") → absoluto, pra abrir fora do app. */
+function absoluteUrl(url?: string): string | null {
+  if (!url) return null;
+  if (/^https?:\/\//u.test(url)) return url;
+  return `${siteUrl.replace(/\/$/u, "")}/${url.replace(/^\//u, "")}`;
+}
+
+/** Monta o texto livre da mensagem WhatsApp a partir do payload do push. */
+function buildWhatsAppMessage(payload: PushPayload): string {
+  const base = `*${payload.title}*\n\n${payload.body}`;
+  const link = absoluteUrl(payload.url);
+  return link ? `${base}\n\n${link}` : base;
+}
+
+/**
+ * Notifica um usuário: WhatsApp (sempre, ignora opt-out) + push (respeita
+ * `category`). Best-effort: NUNCA lança.
+ */
+export async function sendPushToUser(
+  userId: string,
+  payload: PushPayload,
+): Promise<{ sent: number; cleaned: number; whatsappSent: number }> {
+  const phone = await resolveUserPhone(userId).catch(() => null);
+  const { sent: whatsappSent } = await sendWhatsAppText(
+    phone,
+    buildWhatsAppMessage(payload),
+  );
+  const push = await pushOnlyToUser(userId, payload);
+  return { ...push, whatsappSent };
+}
+
+/**
+ * Notifica vários usuários (dedup): WhatsApp em lote paralelo (sempre) + push
+ * por usuário (respeita opt-out). Best-effort.
+ */
 export async function sendPushToUsers(
   userIds: string[],
   payload: PushPayload,
-): Promise<{ sent: number; cleaned: number }> {
+): Promise<{ sent: number; cleaned: number; whatsappSent: number }> {
   const unique = [...new Set(userIds)];
+
+  // WhatsApp: 1 query batelada de telefones + envio paralelo, sempre.
+  const phones = await resolveUserPhones(unique).catch(() => []);
+  const { sent: whatsappSent } = await sendWhatsAppTextBatch(
+    phones,
+    buildWhatsAppMessage(payload),
+  );
+
+  // Push: loop por usuário, respeitando preferências por categoria.
   let sent = 0;
   let cleaned = 0;
   for (const userId of unique) {
-    const r = await sendPushToUser(userId, payload);
+    const r = await pushOnlyToUser(userId, payload);
     sent += r.sent;
     cleaned += r.cleaned;
   }
-  return { sent, cleaned };
+  return { sent, cleaned, whatsappSent };
 }

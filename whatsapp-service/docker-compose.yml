@@ -1,0 +1,21 @@
+services:
+  whatsapp-service:
+    build: .
+    image: whatsapp-service:latest
+    container_name: whatsapp-service
+    restart: unless-stopped
+    # Só o nginx (host) fala com o serviço — nada exposto direto na internet.
+    ports:
+      - "127.0.0.1:9173:9173"
+    environment:
+      PORT: "9173"
+      WA_AUTH_DIR: /data/auth
+      # Defina em um .env ao lado deste arquivo (compose lê automático).
+      WA_SERVICE_TOKEN: ${WA_SERVICE_TOKEN:?defina WA_SERVICE_TOKEN}
+      LOG_LEVEL: info
+    volumes:
+      # Sessão do WhatsApp persistente — sobrevive a restart/rebuild.
+      - wa-auth:/data/auth
+
+volumes:
+  wa-auth:

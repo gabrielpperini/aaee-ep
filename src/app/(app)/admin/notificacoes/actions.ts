@@ -108,7 +108,8 @@ export async function sendBroadcast(
   const userIds = await resolveRecipientUserIds(v);
 
   // Best-effort: nunca lança. Sem category → bypassa NotificationPreference.
-  const { sent } = await sendPushToUsers(userIds, {
+  // WhatsApp envia sempre pra quem tem número (ignora opt-out).
+  const { sent, whatsappSent } = await sendPushToUsers(userIds, {
     title,
     body,
     url: url ?? "/agenda",
@@ -125,9 +126,14 @@ export async function sendBroadcast(
       eventIds: v.toEveryone ? [] : v.eventIds,
       recipientCount: userIds.length,
       sentCount: sent,
+      whatsappSentCount: whatsappSent,
     },
   });
 
   revalidatePath("/admin/notificacoes");
-  return success({ recipientCount: userIds.length, sentCount: sent });
+  return success({
+    recipientCount: userIds.length,
+    sentCount: sent,
+    whatsappSentCount: whatsappSent,
+  });
 }

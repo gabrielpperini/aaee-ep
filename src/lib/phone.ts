@@ -25,6 +25,19 @@ export function phoneDigits(value: string): string {
 }
 
 /**
+ * Normaliza um telefone BR (10/11 dígitos) para o formato com DDI usado pela
+ * WhatsApp Cloud API e por links `wa.me` — ex: `5551999999999`.
+ * Retorna `null` se não tiver 10 ou 11 dígitos.
+ */
+export function toWhatsAppNumber(
+  phone: string | null | undefined,
+): string | null {
+  const digits = phoneDigits(phone ?? "");
+  if (digits.length !== 10 && digits.length !== 11) return null;
+  return digits.startsWith("55") ? digits : `55${digits}`;
+}
+
+/**
  * Monta uma URL `wa.me` a partir de um telefone BR.
  * Retorna `null` se o telefone não tem 10 ou 11 dígitos.
  */
@@ -32,9 +45,8 @@ export function whatsappUrl(
   phone: string | null | undefined,
   message?: string,
 ): string | null {
-  const digits = phoneDigits(phone ?? "");
-  if (digits.length !== 10 && digits.length !== 11) return null;
-  const withCountry = digits.startsWith("55") ? digits : `55${digits}`;
+  const withCountry = toWhatsAppNumber(phone);
+  if (!withCountry) return null;
   const base = `https://wa.me/${withCountry}`;
   return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
