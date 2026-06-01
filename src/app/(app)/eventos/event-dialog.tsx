@@ -26,7 +26,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
@@ -43,14 +42,12 @@ import { useFormAction } from "@/lib/validations/use-form-action";
 import { saveEvent } from "./actions";
 
 type Option = { id: string; name: string };
-type PersonOption = { id: string; name: string; nickname: string | null };
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   modalities: Option[];
   locations: Option[];
-  athletes: PersonOption[];
   initial?: Partial<EventFormValues> & { id?: string };
 };
 
@@ -69,7 +66,6 @@ const empty: EventFormValues = {
   status: "CONFIRMED",
   isConditional: false,
   desiredSupportersCount: 0,
-  athleteIds: [],
 };
 
 export function EventDialog({
@@ -77,7 +73,6 @@ export function EventDialog({
   onOpenChange,
   modalities,
   locations,
-  athletes,
   initial,
 }: Props) {
   const form = useForm<EventFormValues>({
@@ -103,11 +98,6 @@ export function EventDialog({
   const locationOptions = locations.map((l) => ({
     value: l.id,
     label: l.name,
-  }));
-  const athleteOptions = athletes.map((a) => ({
-    value: a.id,
-    label: a.nickname ? `${a.name} (${a.nickname})` : a.name,
-    hint: a.nickname ? undefined : a.name,
   }));
 
   return (
@@ -440,27 +430,6 @@ export function EventDialog({
                   </FormItem>
                 )}
               />
-
-              {athletes.length > 0 && (
-                <FormField
-                  control={form.control}
-                  name="athleteIds"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Atletas envolvidos</FormLabel>
-                      <FormControl>
-                        <MultiSelect
-                          options={athleteOptions}
-                          value={field.value ?? []}
-                          onChange={field.onChange}
-                          placeholder="Selecione atletas…"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <FormField
                 control={form.control}

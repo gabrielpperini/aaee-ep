@@ -13,6 +13,7 @@ import {
 } from "@/lib/validations/_action-result";
 import { personSchema, type PersonFormValues } from "@/lib/validations/person";
 import { phoneDigits } from "@/lib/validations/_primitives";
+import { syncPersonRoster } from "@/lib/roster";
 
 export async function savePerson(
   _prev: FormState,
@@ -36,26 +37,30 @@ export async function savePerson(
   };
 
   try {
-    if (id) {
-      await prisma.$transaction([
-        prisma.person.update({ where: { id }, data }),
-        prisma.modalityAthlete.deleteMany({ where: { personId: id } }),
-        ...(modalityIds.length > 0
-          ? [prisma.modalityAthlete.createMany({
-              data: modalityIds.map((modalityId) => ({ personId: id, modalityId })),
-            })]
-          : []),
-      ]);
-    } else {
-      await prisma.person.create({
-        data: {
-          ...data,
-          modalityAthlete: {
-            create: modalityIds.map((modalityId) => ({ modalityId })),
+    await prisma.$transaction(async (tx) => {
+      let personId = id;
+      if (personId) {
+        await tx.person.update({ where: { id: personId }, data });
+        await tx.modalityAthlete.deleteMany({ where: { personId } });
+        if (modalityIds.length > 0) {
+          await tx.modalityAthlete.createMany({
+            data: modalityIds.map((modalityId) => ({ personId: personId!, modalityId })),
+          });
+        }
+      } else {
+        const person = await tx.person.create({
+          data: {
+            ...data,
+            modalityAthlete: {
+              create: modalityIds.map((modalityId) => ({ modalityId })),
+            },
           },
-        },
-      });
-    }
+        });
+        personId = person.id;
+      }
+      // escalação automática nos eventos das modalidades da pessoa
+      await syncPersonRoster(tx, personId, modalityIds);
+    });
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
       const target = (e.meta?.target ?? []) as string[];

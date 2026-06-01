@@ -82,6 +82,19 @@ export default async function EventDetailPage({
     const assignedIds = new Set(event.assignments.map((a) => a.personId));
     const competingIds = new Set(event.athletes.map((a) => a.personId));
 
+    // Choque de horário só faz sentido entre eventos com horário definido.
+    // Eventos "a definir" (timeTbd) não têm horário real, então não entram na
+    // detecção de conflito — nem como evento-alvo, nem como o outro evento.
+    type OverlapRow = { personId: string; event: { id: string; title: string } };
+    const overlapEvent = event.timeTbd
+      ? null
+      : {
+          startTime: { lt: event.endTime },
+          endTime: { gt: event.startTime },
+          status: { in: COMMITTED_STATUSES },
+          timeTbd: false,
+        };
+
     const [people, conflicts, competingConflicts] = await Promise.all([
       prisma.person.findMany({
         where: {
@@ -90,34 +103,18 @@ export default async function EventDetailPage({
         orderBy: [{ name: "asc" }],
         select: { id: true, name: true, nickname: true, phone: true },
       }),
-      prisma.assignment.findMany({
-        where: {
-          eventId: { not: event.id },
-          event: {
-            startTime: { lt: event.endTime },
-            endTime: { gt: event.startTime },
-            status: { in: COMMITTED_STATUSES },
-          },
-        },
-        select: {
-          personId: true,
-          event: { select: { id: true, title: true } },
-        },
-      }),
-      prisma.eventAthlete.findMany({
-        where: {
-          eventId: { not: event.id },
-          event: {
-            startTime: { lt: event.endTime },
-            endTime: { gt: event.startTime },
-            status: { in: COMMITTED_STATUSES },
-          },
-        },
-        select: {
-          personId: true,
-          event: { select: { id: true, title: true } },
-        },
-      }),
+      overlapEvent
+        ? prisma.assignment.findMany({
+            where: { eventId: { not: event.id }, event: overlapEvent },
+            select: { personId: true, event: { select: { id: true, title: true } } },
+          })
+        : Promise.resolve([] as OverlapRow[]),
+      overlapEvent
+        ? prisma.eventAthlete.findMany({
+            where: { eventId: { not: event.id }, event: overlapEvent },
+            select: { personId: true, event: { select: { id: true, title: true } } },
+          })
+        : Promise.resolve([] as OverlapRow[]),
     ]);
 
     const conflictByPerson = new Map<string, { eventId: string; title: string }>();

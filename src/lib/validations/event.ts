@@ -4,7 +4,6 @@ import {
   eventPhaseEnum,
   eventPriorityEnum,
   eventStatusEnum,
-  idList,
   optionalText,
   requiredText,
 } from "./_primitives";
@@ -29,7 +28,6 @@ export const eventSchema = z
     status: eventStatusEnum,
     isConditional: z.boolean(),
     desiredSupportersCount: z.number().int().min(0),
-    athleteIds: idList,
   })
   .superRefine((data, ctx) => {
     if (data.timeTbd) return; // sem horário definido: não valida o fim

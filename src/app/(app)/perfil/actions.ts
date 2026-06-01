@@ -15,6 +15,7 @@ import {
   type ProfileFormValues,
 } from "@/lib/validations/profile";
 import { phoneDigits } from "@/lib/validations/_primitives";
+import { syncPersonRoster } from "@/lib/roster";
 
 export async function saveOwnProfile(
   _prev: FormState,
@@ -38,30 +39,31 @@ export async function saveOwnProfile(
     semester: typeof semester === "number" ? semester : null,
   };
 
-  if (user.person) {
-    const personId = user.person.id;
-    await prisma.$transaction([
-      prisma.person.update({ where: { id: personId }, data }),
-      prisma.modalityAthlete.deleteMany({ where: { personId } }),
-      ...(modalityIds.length > 0
-        ? [
-            prisma.modalityAthlete.createMany({
-              data: modalityIds.map((modalityId) => ({ personId, modalityId })),
-            }),
-          ]
-        : []),
-    ]);
-  } else {
-    await prisma.person.create({
-      data: {
-        ...data,
-        userId: user.id,
-        modalityAthlete: {
-          create: modalityIds.map((modalityId) => ({ modalityId })),
+  await prisma.$transaction(async (tx) => {
+    let personId = user.person?.id;
+    if (personId) {
+      await tx.person.update({ where: { id: personId }, data });
+      await tx.modalityAthlete.deleteMany({ where: { personId } });
+      if (modalityIds.length > 0) {
+        await tx.modalityAthlete.createMany({
+          data: modalityIds.map((modalityId) => ({ personId: personId!, modalityId })),
+        });
+      }
+    } else {
+      const person = await tx.person.create({
+        data: {
+          ...data,
+          userId: user.id,
+          modalityAthlete: {
+            create: modalityIds.map((modalityId) => ({ modalityId })),
+          },
         },
-      },
-    });
-  }
+      });
+      personId = person.id;
+    }
+    // escalação automática nos eventos das modalidades da pessoa
+    await syncPersonRoster(tx, personId, modalityIds);
+  });
 
   revalidatePath("/perfil");
   return success();

@@ -6,16 +6,13 @@ import { Button } from "@/components/ui/button";
 import { EventDialog } from "./event-dialog";
 
 type Option = { id: string; name: string };
-type PersonOption = { id: string; name: string; nickname: string | null };
 
 export function NewEventButton({
   modalities,
   locations,
-  athletes,
 }: {
   modalities: Option[];
   locations: Option[];
-  athletes: PersonOption[];
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -29,7 +26,6 @@ export function NewEventButton({
         onOpenChange={setOpen}
         modalities={modalities}
         locations={locations}
-        athletes={athletes}
       />
     </>
   );

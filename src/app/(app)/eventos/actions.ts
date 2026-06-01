@@ -11,6 +11,7 @@ import {
   type FormState,
 } from "@/lib/validations/_action-result";
 import { eventSchema, type EventFormValues } from "@/lib/validations/event";
+import { syncEventRoster } from "@/lib/roster";
 
 export async function saveEvent(
   _prev: FormState,
@@ -25,7 +26,6 @@ export async function saveEvent(
 
   const {
     id,
-    athleteIds,
     locationId,
     startTime,
     endTime,
@@ -47,24 +47,14 @@ export async function saveEvent(
     opponent: opponent?.trim() || null,
   };
 
-  if (id) {
-    await prisma.$transaction([
-      prisma.event.update({ where: { id }, data }),
-      prisma.eventAthlete.deleteMany({ where: { eventId: id } }),
-      ...(athleteIds.length > 0
-        ? [prisma.eventAthlete.createMany({
-            data: athleteIds.map((personId) => ({ eventId: id, personId })),
-          })]
-        : []),
-    ]);
-  } else {
-    await prisma.event.create({
-      data: {
-        ...data,
-        athletes: { create: athleteIds.map((personId) => ({ personId })) },
-      },
-    });
-  }
+  // A escalação (EventAthlete) é derivada da modalidade: todo atleta da
+  // modalidade compete no evento. syncEventRoster mantém esse espelho.
+  await prisma.$transaction(async (tx) => {
+    const event = id
+      ? await tx.event.update({ where: { id }, data })
+      : await tx.event.create({ data });
+    await syncEventRoster(tx, event.id, event.modalityId);
+  });
 
   revalidatePath("/eventos");
   revalidatePath("/agenda");

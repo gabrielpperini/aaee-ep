@@ -17,7 +17,6 @@ import type { EventFormValues } from "@/lib/validations/event";
 import { deleteEvent } from "./actions";
 
 type Option = { id: string; name: string };
-type PersonOption = { id: string; name: string; nickname: string | null };
 
 type Props = {
   event: Partial<EventFormValues> & {
@@ -26,10 +25,9 @@ type Props = {
   };
   modalities: Option[];
   locations: Option[];
-  athletes: PersonOption[];
 };
 
-export function EventRowActions({ event, modalities, locations, athletes }: Props) {
+export function EventRowActions({ event, modalities, locations }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -78,7 +76,6 @@ export function EventRowActions({ event, modalities, locations, athletes }: Prop
         onOpenChange={setEditOpen}
         modalities={modalities}
         locations={locations}
-        athletes={athletes}
         initial={event}
       />
       <ConfirmDialog

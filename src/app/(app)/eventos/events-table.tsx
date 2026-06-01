@@ -26,7 +26,6 @@ import type { EventFormValues } from "@/lib/validations/event";
 import { EventRowActions } from "./row-actions";
 
 type Option = { id: string; name: string };
-type PersonOption = { id: string; name: string; nickname: string | null };
 
 export type EventRow = {
   id: string;
@@ -50,12 +49,10 @@ export function EventsTable({
   events,
   modalities,
   locations,
-  athletes,
 }: {
   events: EventRow[];
   modalities: Option[];
   locations: Option[];
-  athletes: PersonOption[];
 }) {
   const columns = React.useMemo<ColumnDef<EventRow>[]>(
     () => [
@@ -189,13 +186,12 @@ export function EventsTable({
             event={row.original.initial}
             modalities={modalities}
             locations={locations}
-            athletes={athletes}
           />
         ),
         meta: { headClassName: "w-12" },
       },
     ],
-    [modalities, locations, athletes],
+    [modalities, locations],
   );
 
   const facets = React.useMemo<FacetConfig[]>(() => {

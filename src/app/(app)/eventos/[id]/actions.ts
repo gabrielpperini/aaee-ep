@@ -40,7 +40,7 @@ export async function upsertAssignment(
 
   const targetEvent = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { id: true, title: true, startTime: true, endTime: true, status: true },
+    select: { id: true, title: true, startTime: true, endTime: true, status: true, timeTbd: true },
   });
   if (!targetEvent) return { ok: false, error: "Evento não encontrado." };
   if (targetEvent.status === "CANCELLED") {
@@ -52,18 +52,23 @@ export async function upsertAssignment(
   }
 
   // Conflito: a pessoa está competindo em outro evento que sobrepõe?
-  const competingElsewhere = await prisma.eventAthlete.findFirst({
-    where: {
-      personId,
-      eventId: { not: eventId },
-      event: {
-        startTime: { lt: targetEvent.endTime },
-        endTime: { gt: targetEvent.startTime },
-        status: { in: COMMITTED_STATUSES },
-      },
-    },
-    select: { event: { select: { title: true } } },
-  });
+  // Choque de horário só vale entre eventos com horário definido — se o alvo
+  // ou o outro evento for "a definir" (timeTbd), não há conflito de horário.
+  const competingElsewhere = targetEvent.timeTbd
+    ? null
+    : await prisma.eventAthlete.findFirst({
+        where: {
+          personId,
+          eventId: { not: eventId },
+          event: {
+            startTime: { lt: targetEvent.endTime },
+            endTime: { gt: targetEvent.startTime },
+            status: { in: COMMITTED_STATUSES },
+            timeTbd: false,
+          },
+        },
+        select: { event: { select: { title: true } } },
+      });
   if (competingElsewhere) {
     return {
       ok: false,
@@ -86,7 +91,7 @@ export async function upsertAssignment(
   }
 
   // Conflito: alocada em outro evento que sobrepõe (passa com `force`).
-  if (!force) {
+  if (!force && !targetEvent.timeTbd) {
     const conflicting = await prisma.assignment.findFirst({
       where: {
         personId,
@@ -95,6 +100,7 @@ export async function upsertAssignment(
           startTime: { lt: targetEvent.endTime },
           endTime: { gt: targetEvent.startTime },
           status: { in: COMMITTED_STATUSES },
+          timeTbd: false,
         },
       },
       select: { event: { select: { title: true } } },

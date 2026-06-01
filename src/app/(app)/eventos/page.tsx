@@ -9,22 +9,16 @@ import { EventsTable, type EventRow } from "./events-table";
 export default async function EventsPage() {
   await requireRole(["DIRECTOR", "ADMIN"]);
 
-  const [events, modalities, locations, athletes] = await Promise.all([
+  const [events, modalities, locations] = await Promise.all([
     prisma.event.findMany({
       orderBy: [{ day: "asc" }, { startTime: "asc" }],
       include: {
         modality: { select: { id: true, name: true } },
         location: { select: { id: true, name: true } },
-        athletes: { select: { personId: true } },
       },
     }),
     prisma.modality.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.location.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    prisma.person.findMany({
-      where: { isAthlete: true },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, nickname: true },
-    }),
   ]);
 
   const rows: EventRow[] = events.map((e) => ({
@@ -58,7 +52,6 @@ export default async function EventsPage() {
       status: e.status,
       isConditional: e.isConditional,
       desiredSupportersCount: e.desiredSupportersCount,
-      athleteIds: e.athletes.map((a) => a.personId),
     },
   }));
 
@@ -69,7 +62,7 @@ export default async function EventsPage() {
         title="Eventos"
         description="Programação completa do EP — jogos, lutas, provas e atividades."
         actions={
-          <NewEventButton modalities={modalities} locations={locations} athletes={athletes} />
+          <NewEventButton modalities={modalities} locations={locations} />
         }
       />
 
@@ -83,7 +76,6 @@ export default async function EventsPage() {
           events={rows}
           modalities={modalities}
           locations={locations}
-          athletes={athletes}
         />
       )}
     </div>
