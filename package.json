@@ -17,11 +17,13 @@
     "test:dev": "dotenv -e .env.test -- next dev --port 3001",
     "test:e2e": "dotenv -e .env.test -- playwright test",
     "test:e2e:ui": "dotenv -e .env.test -- playwright test --ui",
-    "test:e2e:headed": "dotenv -e .env.test -- playwright test --headed"
+    "test:e2e:headed": "dotenv -e .env.test -- playwright test --headed",
+    "mcp": "tsx mcp/server.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
     "@hookform/resolvers": "^5.2.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@radix-ui/react-slot": "^1.2.4",
@@ -36,7 +38,9 @@
     "date-fns-tz": "^3.2.0",
     "dexie": "^4.4.3",
     "dexie-react-hooks": "^4.4.0",
+    "jose": "^6.2.3",
     "lucide-react": "^1.16.0",
+    "mcp-handler": "^1.1.0",
     "next": "16.2.6",
     "next-themes": "^0.4.6",
     "react": "19.2.4",
