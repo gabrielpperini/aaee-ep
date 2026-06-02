@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { fromZonedTime } from "date-fns-tz";
 import { prisma } from "@/lib/prisma";
+import { APP_TIME_ZONE } from "@/lib/time";
 import { requireRole } from "@/lib/auth";
 import {
   fieldErrorsFromZod,
@@ -19,9 +21,10 @@ function toDateOrNull(value: string | undefined | null): Date | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
-  // input type="date" entrega "YYYY-MM-DD". new Date() interpreta como UTC,
-  // o que está OK aqui — armazenamos só a data (12h pra evitar timezone burn).
-  const d = new Date(`${trimmed}T12:00:00`);
+  // input type="date" entrega "YYYY-MM-DD". Ancoramos ao meio-dia de São Paulo
+  // (instante UTC determinístico via fromZonedTime, sem depender do fuso do
+  // servidor) — só a data importa, e 12h dá folga contra timezone burn.
+  const d = fromZonedTime(`${trimmed}T12:00:00`, APP_TIME_ZONE);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 

@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { ptBR } from "date-fns/locale";
 import type {
   AssignmentRole,
@@ -8,22 +8,22 @@ import type {
   EventStatus,
   ModalityCategory,
 } from "@/generated/prisma/client";
-import { nowDate } from "./time";
+import { APP_TIME_ZONE, nowDate } from "./time";
 
 /** Rótulo usado quando o evento ainda não tem horário definido (`timeTbd`). */
 export const TIME_TBD_LABEL = "Horário a definir";
 
 export function formatEventTime(start: Date, end: Date, timeTbd = false): string {
   if (timeTbd) return TIME_TBD_LABEL;
-  return `${format(start, "HH:mm")} – ${format(end, "HH:mm")}`;
+  return `${formatInTimeZone(start, APP_TIME_ZONE, "HH:mm")} – ${formatInTimeZone(end, APP_TIME_ZONE, "HH:mm")}`;
 }
 
 export function formatDate(date: Date): string {
-  return format(date, "dd 'de' MMMM", { locale: ptBR });
+  return formatInTimeZone(date, APP_TIME_ZONE, "dd 'de' MMMM", { locale: ptBR });
 }
 
 export function formatDateTime(date: Date): string {
-  return format(date, "dd/MM HH:mm");
+  return formatInTimeZone(date, APP_TIME_ZONE, "dd/MM HH:mm");
 }
 
 /** "Quando" pra mensagens (WhatsApp): data+hora, ou só data se sem horário. */
@@ -32,9 +32,9 @@ export function formatEventWhen(start: Date, timeTbd = false): string {
 }
 
 export function toDatetimeLocal(date: Date): string {
-  // Para inputs do tipo datetime-local — string sem timezone.
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  // Wall-clock de São Paulo pro DateTimePicker (string sem timezone). Pinado em
+  // APP_TIME_ZONE pra não depender do fuso do navegador/servidor que renderiza.
+  return formatInTimeZone(date, APP_TIME_ZONE, "yyyy-MM-dd'T'HH:mm");
 }
 
 export const PRIORITY_LABELS: Record<EventPriority, string> = {

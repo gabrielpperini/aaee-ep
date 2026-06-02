@@ -1,5 +1,6 @@
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { ptBR } from "date-fns/locale";
+import { APP_TIME_ZONE } from "./time";
 
 /** Singleton id da edição atual do EP. */
 export const EP_EDITION_ID = "current";
@@ -34,5 +35,5 @@ export type EpEditionDates = {
 /** Formata a data de um day como "qua, 22/05". Retorna null se não houver. */
 export function formatEpDayDate(date: Date | null | undefined): string | null {
   if (!date) return null;
-  return format(date, "EEE, dd/MM", { locale: ptBR });
+  return formatInTimeZone(date, APP_TIME_ZONE, "EEE, dd/MM", { locale: ptBR });
 }

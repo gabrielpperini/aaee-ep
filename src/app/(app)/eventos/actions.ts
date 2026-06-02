@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { fromZonedTime } from "date-fns-tz";
 import { prisma } from "@/lib/prisma";
+import { APP_TIME_ZONE } from "@/lib/time";
 import { requireRole } from "@/lib/auth";
 import {
   failure,
@@ -35,13 +37,15 @@ export async function saveEvent(
     ...rest
   } = parsed.data;
 
-  const start = new Date(startTime);
+  // O picker entrega wall-clock de São Paulo ("YYYY-MM-DDTHH:mm"); fromZonedTime
+  // o converte no instante UTC correto sem depender do fuso do servidor.
+  const start = fromZonedTime(startTime, APP_TIME_ZONE);
   const data = {
     ...rest,
     timeTbd,
     startTime: start,
     // Sem horário definido: o fim só ancora a data (igual ao início).
-    endTime: timeTbd ? start : new Date(endTime),
+    endTime: timeTbd ? start : fromZonedTime(endTime, APP_TIME_ZONE),
     locationId: locationId || null,
     description: description?.trim() || null,
     opponent: opponent?.trim() || null,
