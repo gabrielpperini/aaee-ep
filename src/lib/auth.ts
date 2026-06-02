@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { resolveLinkablePerson } from "@/lib/auth-link";
+import { Prisma } from "@/generated/prisma/client";
 import type { Role } from "@/generated/prisma/client";
 
 /**
@@ -47,7 +48,8 @@ export const getCurrentUser = cache(async () => {
     "";
   const phoneDigits = metaPhoneRaw.replace(/\D/g, "") || null;
 
-  return prisma.$transaction(async (tx) => {
+  try {
+    return await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
         authUserId: authUser.id,
@@ -94,7 +96,24 @@ export const getCurrentUser = cache(async () => {
       where: { id: newUser.id },
       include: { person: true },
     });
-  });
+    });
+  } catch (err) {
+    // Primeiro login dispara requisições concorrentes (router.replace +
+    // refresh + prefetch) que renderizam o layout e chamam getCurrentUser em
+    // paralelo. Ambas veem findUnique=null e tentam criar o User → a segunda
+    // estoura P2002 no `authUserId @unique`. Em vez de derrubar a página
+    // (tela de erro do Vercel), recarrega o registro que a outra criou.
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return prisma.user.findUniqueOrThrow({
+        where: { authUserId: authUser.id },
+        include: { person: true },
+      });
+    }
+    throw err;
+  }
 });
 
 export async function requireUser() {

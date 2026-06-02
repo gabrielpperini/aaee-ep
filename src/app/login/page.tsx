@@ -342,7 +342,10 @@ function OtpRequestForm({
     startTransition(async () => {
       const { error } = await supabase.auth.signInWithOtp({
         email: values.email,
-        options: { shouldCreateUser: false },
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) {
         toast.error("Não consegui enviar o código", {

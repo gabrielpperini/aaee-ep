@@ -49,16 +49,19 @@ export async function setupNewAccount(
   };
 
   await prisma.$transaction(async (tx) => {
-    let user = await tx.user.findUnique({ where: { authUserId: authUser.id } });
-    if (!user) {
-      user = await tx.user.create({
-        data: {
-          authUserId: authUser.id,
-          email: normalizedEmail,
-          phone: phoneNum || authUser.phone || null,
-        },
-      });
-    } else if (phoneNum && !user.phone) {
+    // `upsert` em vez de findUnique+create: o `getCurrentUser` (layout) pode
+    // criar o User concorrentemente no primeiro login e estourar P2002 no
+    // `authUserId @unique`. O upsert torna a criação idempotente.
+    let user = await tx.user.upsert({
+      where: { authUserId: authUser.id },
+      update: {},
+      create: {
+        authUserId: authUser.id,
+        email: normalizedEmail,
+        phone: phoneNum || authUser.phone || null,
+      },
+    });
+    if (phoneNum && !user.phone) {
       user = await tx.user.update({
         where: { id: user.id },
         data: { phone: phoneNum },
