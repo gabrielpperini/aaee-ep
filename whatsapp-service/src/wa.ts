@@ -42,11 +42,16 @@ function jitter(min = 1000, max = 3000): number {
   return Math.floor(min + Math.random() * (max - min));
 }
 
-/** 10/11 dígitos BR → com DDI 55. null se claramente inválido. */
+/**
+ * Normaliza pra E.164 BR. 10-11 dígitos = sem DDI (o "55" inicial, quando
+ * houver, é DDD de Santa Maria/RS, não país) → prefixa 55. 12-13 com 55 já
+ * tem DDI. null caso contrário.
+ */
 function normalize(raw: string): string | null {
   const d = raw.replace(/\D/g, "");
-  if (d.length < 10) return null;
-  return d.startsWith("55") ? d : `55${d}`;
+  if ((d.length === 12 || d.length === 13) && d.startsWith("55")) return d;
+  if (d.length === 10 || d.length === 11) return `55${d}`;
+  return null;
 }
 
 /**

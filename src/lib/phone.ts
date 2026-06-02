@@ -32,9 +32,13 @@ export function phoneDigits(value: string): string {
 export function toWhatsAppNumber(
   phone: string | null | undefined,
 ): string | null {
-  const digits = phoneDigits(phone ?? "");
-  if (digits.length !== 10 && digits.length !== 11) return null;
-  return digits.startsWith("55") ? digits : `55${digits}`;
+  const d = phoneDigits(phone ?? "");
+  // Já tem DDI (12-13 dígitos começando com 55): usa como está.
+  if ((d.length === 12 || d.length === 13) && d.startsWith("55")) return d;
+  // 10-11 dígitos = número BR SEM DDI — aqui o "55" inicial (quando houver) é
+  // DDD (Santa Maria/RS), não código de país. Então sempre prefixa o 55.
+  if (d.length === 10 || d.length === 11) return `55${d}`;
+  return null;
 }
 
 /**
