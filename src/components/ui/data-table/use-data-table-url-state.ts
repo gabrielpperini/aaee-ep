@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import type {
   ColumnFiltersState,
   OnChangeFn,
@@ -36,10 +36,16 @@ export type DataTableUrlState = {
 };
 
 /**
- * Sincroniza o estado do TanStack Table com a query string da URL — a URL é a
- * única fonte de verdade. Cada setter reescreve a query com `router.replace`
- * (`scroll:false`), preservando params alheios. Como os forms de criação/edição
- * são dialogs (não navegam), o estado persiste automaticamente após salvar.
+ * Mantém o estado do TanStack Table com **feedback imediato** (estado local) e
+ * sincroniza a URL **depois do render**, via `window.history.replaceState`.
+ *
+ * Por que não `router.replace`: a página de listagem é um server component
+ * (auth + Prisma) e, mesmo sem ler `searchParams`, qualquer navegação do App
+ * Router re-executa o RSC a cada clique/tecla — o que travava a UI. O History
+ * API atualiza só a barra de endereço (e `useSearchParams`), sem navegação nem
+ * refetch. A persistência após criar/editar continua de graça: os forms são
+ * dialogs (não navegam) e o estado local sobrevive ao `revalidatePath`. Reload
+ * e deep-link são cobertos pelo seed inicial a partir da URL.
  */
 export function useDataTableUrlState({
   initialSorting,
@@ -55,21 +61,15 @@ export function useDataTableUrlState({
   /** Prefixo opcional, caso duas tabelas coexistam na mesma rota. */
   urlKey?: string;
 }): DataTableUrlState {
+  // Lido só no primeiro render pra semear o estado (deep-link / reload).
   const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
-
   const key = React.useCallback(
     (name: string) => (urlKey ? `${urlKey}_${name}` : name),
     [urlKey],
   );
 
-  const facetKey = React.useMemo(() => new Set(facetIds), [facetIds]);
-  const sp = searchParams.toString();
-
-  const sorting = React.useMemo<SortingState>(() => {
-    const params = new URLSearchParams(sp);
-    const raw = params.get(key("sort"));
+  const [sorting, setSorting] = React.useState<SortingState>(() => {
+    const raw = searchParams.get(key("sort"));
     if (raw == null) return initialSorting;
     if (raw === "") return [];
     return raw
@@ -80,89 +80,95 @@ export function useDataTableUrlState({
           ? { id: tok.slice(1), desc: true }
           : { id: tok, desc: false },
       );
-  }, [sp, key, initialSorting]);
+  });
 
-  const columnFilters = React.useMemo<ColumnFiltersState>(() => {
-    const params = new URLSearchParams(sp);
-    const out: ColumnFiltersState = [];
-    const q = params.get(key("q"));
-    if (q) out.push({ id: SEARCH_COLUMN_ID, value: q });
-    for (const id of facetIds) {
-      const v = params.get(key(id));
-      if (v) out.push({ id, value: v.split(",").filter(Boolean) });
-    }
-    return out;
-  }, [sp, key, facetIds]);
-
-  const pagination = React.useMemo<PaginationState>(() => {
-    const params = new URLSearchParams(sp);
-    const pageRaw = Number(params.get(key("page")));
-    const sizeRaw = Number(params.get(key("size")));
-    const pageIndex =
-      Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw - 1 : 0;
-    const size = Number.isInteger(sizeRaw) && sizeRaw > 0 ? sizeRaw : pageSize;
-    return { pageIndex, pageSize: size };
-  }, [sp, key, pageSize]);
-
-  const commit = React.useCallback(
-    (mutate: (params: URLSearchParams) => void) => {
-      const params = new URLSearchParams(sp);
-      mutate(params);
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    () => {
+      const out: ColumnFiltersState = [];
+      const q = searchParams.get(key("q"));
+      if (q) out.push({ id: SEARCH_COLUMN_ID, value: q });
+      for (const id of facetIds) {
+        const v = searchParams.get(key(id));
+        if (v) out.push({ id, value: v.split(",").filter(Boolean) });
+      }
+      return out;
     },
-    [sp, pathname, router],
   );
+
+  const [pagination, setPagination] = React.useState<PaginationState>(() => {
+    const pageRaw = Number(searchParams.get(key("page")));
+    const sizeRaw = Number(searchParams.get(key("size")));
+    return {
+      pageIndex: Number.isInteger(pageRaw) && pageRaw > 0 ? pageRaw - 1 : 0,
+      pageSize: Number.isInteger(sizeRaw) && sizeRaw > 0 ? sizeRaw : pageSize,
+    };
+  });
+
+  // `initialSorting` costuma ser um literal novo a cada render; fixa o valor
+  // inicial num ref (lido só dentro do efeito) pra não disparar sync à toa.
+  const initialSortingRef = React.useRef(initialSorting);
+  const mounted = React.useRef(false);
+
+  React.useEffect(() => {
+    // Não toca no history no mount: o estado já veio da URL.
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+
+    if (sameSorting(sorting, initialSortingRef.current)) params.delete(key("sort"));
+    else
+      params.set(
+        key("sort"),
+        sorting.map((s) => (s.desc ? `-${s.id}` : s.id)).join(","),
+      );
+
+    params.delete(key("q"));
+    for (const id of facetIds) params.delete(key(id));
+    for (const f of columnFilters) {
+      if (f.id === SEARCH_COLUMN_ID) {
+        if (f.value) params.set(key("q"), String(f.value));
+      } else if (facetIds.includes(f.id)) {
+        const arr = (f.value as string[] | undefined) ?? [];
+        if (arr.length) params.set(key(f.id), arr.join(","));
+      }
+    }
+
+    if (pagination.pageIndex > 0)
+      params.set(key("page"), String(pagination.pageIndex + 1));
+    else params.delete(key("page"));
+    if (pagination.pageSize !== pageSize)
+      params.set(key("size"), String(pagination.pageSize));
+    else params.delete(key("size"));
+
+    const qs = params.toString();
+    const url = qs
+      ? `${window.location.pathname}?${qs}`
+      : window.location.pathname;
+    window.history.replaceState(null, "", url);
+  }, [sorting, columnFilters, pagination, facetIds, pageSize, key]);
 
   const onSortingChange = React.useCallback<OnChangeFn<SortingState>>(
     (updater) => {
-      const next = resolveUpdater(updater, sorting);
-      commit((p) => {
-        if (sameSorting(next, initialSorting)) p.delete(key("sort"));
-        else
-          p.set(
-            key("sort"),
-            next.map((s) => (s.desc ? `-${s.id}` : s.id)).join(","),
-          );
-        p.delete(key("page"));
-      });
+      setSorting((prev) => resolveUpdater(updater, prev));
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     },
-    [commit, sorting, initialSorting, key],
+    [],
   );
 
   const onColumnFiltersChange = React.useCallback<
     OnChangeFn<ColumnFiltersState>
-  >(
-    (updater) => {
-      const next = resolveUpdater(updater, columnFilters);
-      commit((p) => {
-        p.delete(key("q"));
-        for (const id of facetKey) p.delete(key(id));
-        for (const f of next) {
-          if (f.id === SEARCH_COLUMN_ID) {
-            if (f.value) p.set(key("q"), String(f.value));
-          } else if (facetKey.has(f.id)) {
-            const arr = (f.value as string[] | undefined) ?? [];
-            if (arr.length) p.set(key(f.id), arr.join(","));
-          }
-        }
-        p.delete(key("page"));
-      });
-    },
-    [commit, columnFilters, facetKey, key],
-  );
+  >((updater) => {
+    setColumnFilters((prev) => resolveUpdater(updater, prev));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, []);
 
   const onPaginationChange = React.useCallback<OnChangeFn<PaginationState>>(
     (updater) => {
-      const next = resolveUpdater(updater, pagination);
-      commit((p) => {
-        if (next.pageIndex > 0) p.set(key("page"), String(next.pageIndex + 1));
-        else p.delete(key("page"));
-        if (next.pageSize !== pageSize) p.set(key("size"), String(next.pageSize));
-        else p.delete(key("size"));
-      });
+      setPagination((prev) => resolveUpdater(updater, prev));
     },
-    [commit, pagination, pageSize, key],
+    [],
   );
 
   return {
