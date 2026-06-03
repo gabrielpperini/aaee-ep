@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 
-import { cn } from "@/lib/utils"
+import { cn, normalizeSearch } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -17,13 +17,21 @@ import {
 } from "@/components/ui/input-group"
 import { SearchIcon, CheckIcon } from "lucide-react"
 
+// Substring insensível a acento e caixa — sobrescreve o filtro fuzzy padrão do
+// cmdk. Cobre MultiSelect, Combobox e o command palette de uma vez.
+function commandFilter(value: string, search: string) {
+  return normalizeSearch(value).includes(normalizeSearch(search)) ? 1 : 0
+}
+
 function Command({
   className,
+  filter,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
     <CommandPrimitive
       data-slot="command"
+      filter={filter ?? commandFilter}
       className={cn(
         "flex size-full flex-col overflow-hidden rounded-xl! bg-popover p-1 text-popover-foreground",
         className

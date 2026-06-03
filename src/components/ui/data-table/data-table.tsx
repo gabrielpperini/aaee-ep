@@ -3,7 +3,6 @@
 import * as React from "react";
 import {
   type ColumnDef,
-  type ColumnFiltersState,
   type RowData,
   type SortingState,
   type VisibilityState,
@@ -27,12 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { includesNormalized } from "./filters";
 import { DataTablePagination } from "./data-table-pagination";
 import {
   DataTableToolbar,
   SEARCH_COLUMN_ID,
   type FacetConfig,
 } from "./data-table-toolbar";
+import { useDataTableUrlState } from "./use-data-table-url-state";
 
 // Permite que cada coluna controle classes de alinhamento/largura do header e
 // das células (ex: "text-right tabular-nums", "w-12").
@@ -59,6 +60,7 @@ export function DataTable<TData, TValue>({
   pageSize = 25,
   emptyMessage = "Nenhum resultado encontrado.",
   toolbarExtra,
+  urlKey,
 }: {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -70,11 +72,21 @@ export function DataTable<TData, TValue>({
   pageSize?: number;
   emptyMessage?: string;
   toolbarExtra?: React.ReactNode;
+  /** Prefixo opcional dos params de URL, caso 2 tabelas coexistam na rota. */
+  urlKey?: string;
 }) {
-  const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
+  const facetIds = React.useMemo(
+    () => facets?.map((f) => f.columnId) ?? [],
+    [facets],
   );
+  const {
+    sorting,
+    columnFilters,
+    pagination,
+    onSortingChange,
+    onColumnFiltersChange,
+    onPaginationChange,
+  } = useDataTableUrlState({ initialSorting, pageSize, facetIds, urlKey });
 
   const allColumns = React.useMemo<ColumnDef<TData, TValue>[]>(() => {
     if (!searchAccessor) return columns;
@@ -84,7 +96,7 @@ export function DataTable<TData, TValue>({
         id: SEARCH_COLUMN_ID,
         accessorFn: (row) => searchAccessor(row),
         enableSorting: false,
-        filterFn: "includesString",
+        filterFn: includesNormalized,
       } as ColumnDef<TData, TValue>,
     ];
   }, [columns, searchAccessor]);
@@ -101,10 +113,11 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns: allColumns,
-    state: { sorting, columnFilters, columnVisibility },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    initialState: { pagination: { pageSize } },
+    state: { sorting, columnFilters, columnVisibility, pagination },
+    onSortingChange,
+    onColumnFiltersChange,
+    onPaginationChange,
+    autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),

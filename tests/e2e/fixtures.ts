@@ -18,6 +18,17 @@ type Fixtures = {
   personas: typeof PERSONAS;
 };
 
+/**
+ * Mesmo instante do seed/server (`E2E_FROZEN_TIME`). O server-side já é
+ * determinístico via `nowDate()`, mas componentes client-side que leem
+ * `new Date()` (ex: o mês default do <Calendar> no DateTimePicker) divergiriam
+ * quando a data real do runner passasse do frozen. `setFixedTime` alinha o
+ * relógio do browser sem pausar timers — debounce/transições seguem rodando.
+ */
+const FROZEN_TIME = new Date(
+  process.env.E2E_FROZEN_TIME ?? "2026-05-22T15:00:00.000Z",
+);
+
 async function authedPage(browser: import("@playwright/test").Browser, key: PersonaKey): Promise<Page> {
   const ctx = await browser.newContext({ storageState: storageStatePath(key) });
   // Suprime o modal <InstallPrompt /> (abre 1200ms pós-login e seu overlay
@@ -29,7 +40,9 @@ async function authedPage(browser: import("@playwright/test").Browser, key: Pers
       // sem storage — ignora
     }
   });
-  return ctx.newPage();
+  const page = await ctx.newPage();
+  await page.clock.setFixedTime(FROZEN_TIME);
+  return page;
 }
 
 export const test = base.extend<Fixtures>({
@@ -61,6 +74,7 @@ export const test = base.extend<Fixtures>({
   guest: async ({ browser }, use) => {
     const ctx = await browser.newContext(); // sem storageState
     const page = await ctx.newPage();
+    await page.clock.setFixedTime(FROZEN_TIME);
     await use(page);
     await ctx.close();
   },
@@ -76,4 +90,4 @@ export const test = base.extend<Fixtures>({
 });
 
 export { expect };
-export type { Persona, PersonaKey };
+export type { Persona, PersonaKey, Page };

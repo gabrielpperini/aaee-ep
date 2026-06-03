@@ -1,5 +1,7 @@
 import type { Row } from "@tanstack/react-table";
 
+import { normalizeSearch } from "@/lib/utils";
+
 /**
  * Faceta de coluna escalar: mantém a linha quando o valor (string) está entre
  * os selecionados. `filterValue` é o array de valores marcados na faceta.
@@ -30,4 +32,17 @@ export function arrayOverlapFilter<TData>(
   if (!selected?.length) return true;
   const values = row.getValue<string[]>(columnId) ?? [];
   return selected.some((v) => values.includes(v));
+}
+
+/**
+ * Busca textual global: substring insensível a acento e caixa. Substitui o
+ * `includesString` nativo do TanStack (sensível a acento) na coluna de busca.
+ */
+export function includesNormalized<TData>(
+  row: Row<TData>,
+  columnId: string,
+  filterValue: unknown,
+): boolean {
+  const cell = normalizeSearch(String(row.getValue(columnId) ?? ""));
+  return cell.includes(normalizeSearch(String(filterValue ?? "")));
 }

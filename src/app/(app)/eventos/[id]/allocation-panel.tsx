@@ -16,7 +16,7 @@ import {
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { ASSIGNMENT_ROLE_LABELS, formatEventWhen } from "@/lib/format";
 import type { AssignmentRole } from "@/generated/prisma/client";
-import { cn } from "@/lib/utils";
+import { cn, normalizeSearch } from "@/lib/utils";
 import { enqueueOrRun } from "@/lib/db/sync-queue";
 import { removeAssignment, upsertAssignment } from "./actions";
 
@@ -93,8 +93,8 @@ export function AllocationPanel({
   const filteredAvailable = localAvailable.filter((p) => {
     if (hideConflicts && (p.conflict || p.competingElsewhere)) return false;
     if (!search) return true;
-    const haystack = `${p.name} ${p.nickname ?? ""}`.toLowerCase();
-    return haystack.includes(search.toLowerCase());
+    const haystack = normalizeSearch(`${p.name} ${p.nickname ?? ""}`);
+    return haystack.includes(normalizeSearch(search));
   });
 
   function add(personId: string) {
