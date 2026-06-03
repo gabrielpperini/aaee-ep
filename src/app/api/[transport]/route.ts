@@ -2,7 +2,7 @@
  * MCP da plataforma — transporte HTTP remoto (Streamable HTTP) pra usar no app
  * do Claude no celular como "conector".
  *
- * As mesmas 26 tools do stdio (mcp/tools.ts) são registradas aqui via mcp-handler.
+ * As mesmas tools do stdio (mcp/tools.ts) são registradas aqui via mcp-handler.
  * Endpoint resultante (com basePath "/api"): POST /api/mcp
  *
  * Proteção: URL-capacidade. A URL do conector carrega um segredo

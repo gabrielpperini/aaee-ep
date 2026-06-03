@@ -16,25 +16,42 @@ conversão de fuso, status derivado).
 
 | Área | Tools |
 |------|-------|
-| **Modalidades** | `list_modalities`, `create_modality`, `update_modality`, `delete_modality` |
-| **Locais** | `list_locations`, `create_location`, `update_location` |
+São **47 tools** cobrindo todos os CRUDs e features da plataforma:
+
+| **Modalidades** | `list_modalities`, `get_modality`, `create_modality`, `update_modality`, `delete_modality` |
+| **Locais** | `list_locations`, `get_location`, `create_location`, `update_location`, `delete_location` |
 | **Pessoas** | `list_people`, `get_person`, `create_person`, `update_person`, `delete_person` |
-| **Eventos** | `list_events`, `get_event`, `create_event`, `update_event`, `delete_event`, `set_event_status` |
+| **Eventos** | `list_events`, `get_event`, `create_event`, `update_event`, `delete_event`, `set_event_status`, `get_agenda` |
 | **Escalação (modalidade)** | `list_modality_athletes`, `set_modality_athletes` |
-| **Torcida** | `allocate_supporter`, `remove_assignment` |
-| **Check-in** | `check_in`, `undo_check_in` |
-| **Visão geral** | `get_ep_edition`, `dashboard_summary` |
+| **Torcida** | `allocate_supporter`, `remove_assignment`, `list_assignments`, `available_supporters_for_event` |
+| **Check-in** | `check_in`, `undo_check_in`, `list_check_ins` |
+| **Usuários** | `list_users`, `get_user`, `set_user_role`, `link_person_to_user`, `create_person_from_user` |
+| **Notificações** | `preview_broadcast_recipients`, `send_broadcast`, `list_broadcasts`, `call_supporters`, `list_push_subscriptions`, `list_notification_preferences` |
+| **EP / visão geral** | `get_ep_edition`, `set_ep_edition`, `dashboard_summary`, `dashboard_detail`, `list_sync_operations` |
 
 ### Regras de negócio preservadas
 - **Escalação automática:** ao salvar evento/pessoa, o `EventAthlete` é
   re-sincronizado a partir das modalidades. Sem seleção manual de atletas.
-- **Fuso:** `startTime`/`endTime` em **horário de São Paulo** (`YYYY-MM-DDTHH:mm`),
-  gravados em UTC. A leitura devolve ISO (UTC) + `when` (SP) + `derivedStatus`.
-- **Conflitos de torcida** e **janela de check-in** (30min antes / 60min depois).
+- **Fuso:** eventos usam `startTime`/`endTime` em SP (`YYYY-MM-DDTHH:mm`); `set_ep_edition`
+  usa datas `YYYY-MM-DD` ancoradas às 12:00 SP. Tudo gravado em UTC; leitura devolve ISO +
+  `when` (SP) + `derivedStatus`.
+- **Conflitos de torcida** (`available_supporters_for_event` sinaliza), **janela de check-in**
+  (30min antes / 60min depois) e **throttle de 5min** no `call_supporters`.
+
+### Leitura completa dos dados
+`get_*` retorna o registro completo + relações; `list_*` campos principais + filtros. Toda
+tabela é legível. Dados de usuário expõem **app instalado** (`appInstalled`), **push ativo**
+(`pushActive`/`deviceCount`) e **preferências de notificação** — com filtros `appInstalled`
+e `hasPush` em `list_users`. Chaves de push (`p256dh`/`auth`/`endpoint`) são **mascaradas**.
 
 ### Diferenças vs. o app
-- **Sem requireRole/requireUser** — `check_in` recebe `personId` explícito.
-- **Sem push/WhatsApp** — best-effort; seguem saindo pela UI e crons do app.
+- **Sem requireRole/requireUser** — o caller é tratado como **admin** (a proteção é a
+  URL-capacidade). `check_in` recebe `personId` explícito; `set_user_role` **não** tem guarda
+  de auto-rebaixamento; `send_broadcast` grava `Broadcast.sentById = null`.
+- **Push/WhatsApp:** `send_broadcast` e `call_supporters` carregam `@/lib/push` via `import()`
+  dinâmico. Funcionam **pleno só no transporte HTTP** (Vercel tem VAPID/WhatsApp). No **stdio**
+  o envio **degrada** (`delivered:false`) porque `server-only` é irresolvível fora do Next — o
+  registro do `Broadcast` ainda é gravado.
 
 ---
 
