@@ -1,7 +1,7 @@
 import "dotenv/config";
 import webpush from "web-push";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, AssignmentRole } from "@/generated/prisma/client";
+import { PrismaClient, AssignmentRole, type EventStatus } from "@/generated/prisma/client";
 
 /**
  * Escala os capitães da torcida do Dia 1 e notifica cada um.
@@ -33,7 +33,7 @@ const CAPTAINS: { eventId: string; personId: string; who: string }[] = [
   { who: "Isabella", personId: "cmprijlqh000uq8rym4d2nveq", eventId: "cmprki3ep0002a5rywjtsb17g" }, // Futebol de Campo 13:35
 ];
 
-const COMMITTED_STATUSES = ["CONFIRMED", "POSTPONED"] as const; // espelha src/lib/format
+const COMMITTED_STATUSES: EventStatus[] = ["CONFIRMED", "POSTPONED"]; // espelha src/lib/format
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ep.aaee.com.br";
 
@@ -69,7 +69,7 @@ async function main() {
     const competingElsewhere = ev.timeTbd ? null : await prisma.eventAthlete.findFirst({
       where: {
         personId: c.personId, eventId: { not: ev.id },
-        event: { startTime: { lt: ev.endTime }, endTime: { gt: ev.startTime }, status: { in: COMMITTED_STATUSES as unknown as string[] }, timeTbd: false },
+        event: { startTime: { lt: ev.endTime }, endTime: { gt: ev.startTime }, status: { in: COMMITTED_STATUSES }, timeTbd: false },
       },
       select: { event: { select: { title: true } } },
     });

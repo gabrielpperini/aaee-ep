@@ -1,7 +1,7 @@
 import "dotenv/config";
 import webpush from "web-push";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, AssignmentRole } from "@/generated/prisma/client";
+import { PrismaClient, AssignmentRole, type EventStatus } from "@/generated/prisma/client";
 
 /**
  * Atribui torcida/apoio/capitão a eventos — IMITA o server action
@@ -31,7 +31,7 @@ import { PrismaClient, AssignmentRole } from "@/generated/prisma/client";
  *                  --no-notify (grava mas não dispara push/WhatsApp).
  */
 
-const COMMITTED_STATUSES = ["CONFIRMED", "POSTPONED"];
+const COMMITTED_STATUSES: EventStatus[] = ["CONFIRMED", "POSTPONED"];
 const ROLE_LABELS: Record<string, string> = {
   SUPPORTER: "Torcedor(a)",
   CAPTAIN: "Capitão/Capitã",
