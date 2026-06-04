@@ -138,11 +138,15 @@ async function pushOnlyToUser(
   return { sent, cleaned };
 }
 
+// Base dos links das notificações. NÃO usar VERCEL_URL: em deploy ela aponta
+// pra URL única do deployment (ex: aaee-xxxx.vercel.app), que muda a cada build
+// e não é o domínio público. Default sempre o domínio de produção.
+const PROD_SITE_URL = "https://ep.aaee.com.br";
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000");
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : PROD_SITE_URL);
 
 /** Link relativo (ex: "/agenda") → absoluto, pra abrir fora do app. */
 function absoluteUrl(url?: string): string | null {

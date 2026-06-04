@@ -73,8 +73,19 @@ export function AllocationPanel({
 }: Props) {
   const [search, setSearch] = useState("");
   const [hideConflicts, setHideConflicts] = useState(true);
-  const [busyPerson, setBusyPerson] = useState<string | null>(null);
+  // Set (não string única): várias pessoas podem estar sendo escaladas ao mesmo
+  // tempo. Cada toque é independente — não bloqueia os outros botões.
+  const [busyPersons, setBusyPersons] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
+
+  const markBusy = (id: string) =>
+    setBusyPersons((s) => new Set(s).add(id));
+  const clearBusy = (id: string) =>
+    setBusyPersons((s) => {
+      const next = new Set(s);
+      next.delete(id);
+      return next;
+    });
 
   // Estado otimista local: offline a action não revalida o servidor, então a
   // UI tem que refletir a mudança na hora. Online, a revalidação do RSC traz
@@ -122,7 +133,7 @@ export function AllocationPanel({
       ].sort(byName),
     );
 
-    setBusyPerson(personId);
+    markBusy(personId);
     startTransition(async () => {
       const r = await enqueueOrRun(
         () =>
@@ -136,7 +147,7 @@ export function AllocationPanel({
           }),
         { kind: "allocate", eventId, personId, role: "SUPPORTER", isCaptain: false, notes: "", force: hasConflict },
       );
-      setBusyPerson(null);
+      clearBusy(personId);
       if (r.status === "error") {
         setLocalAvailable(prevAvailable);
         setLocalAssignments(prevAssignments);
@@ -168,7 +179,7 @@ export function AllocationPanel({
       ),
     );
 
-    setBusyPerson(input.personId);
+    markBusy(input.personId);
     startTransition(async () => {
       const r = await enqueueOrRun(
         () =>
@@ -184,7 +195,7 @@ export function AllocationPanel({
           }),
         { kind: "allocate", eventId, personId: input.personId, role, isCaptain, notes, force: true },
       );
-      setBusyPerson(null);
+      clearBusy(input.personId);
       if (r.status === "error") {
         setLocalAssignments(prevAssignments);
         toast.error(r.error);
@@ -216,13 +227,13 @@ export function AllocationPanel({
       ].sort(byName),
     );
 
-    setBusyPerson(personId);
+    markBusy(personId);
     startTransition(async () => {
       const r = await enqueueOrRun(
         () => removeAssignment({ eventId, personId }),
         { kind: "deallocate", eventId, personId },
       );
-      setBusyPerson(null);
+      clearBusy(personId);
       if (r.status === "error") {
         setLocalAvailable(prevAvailable);
         setLocalAssignments(prevAssignments);
@@ -272,7 +283,9 @@ export function AllocationPanel({
             {hideConflicts ? "Só livres" : "Todos"}
           </Button>
         </div>
-        <div className="max-h-80 overflow-y-auto rounded-md border border-border bg-background">
+        {/* No mobile o scroll fica no flow da página (sem container aninhado, que
+            travava o toque e escondia o botão). No desktop volta o scroll interno. */}
+        <div className="rounded-md border border-border bg-background sm:max-h-80 sm:overflow-y-auto sm:overscroll-contain">
           {filteredAvailable.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-muted-foreground">
               Ninguém disponível no horário deste evento.
@@ -314,7 +327,9 @@ export function AllocationPanel({
                       type="button"
                       size="sm"
                       variant="outline"
-                      disabled={busyPerson !== null}
+                      // Sem disable global: a pessoa some da lista na hora
+                      // (otimista), então dá pra tocar em várias seguidas sem
+                      // esperar o loading de cada uma.
                       onClick={() => add(p.id)}
                     >
                       Escalar
@@ -343,7 +358,7 @@ export function AllocationPanel({
                 key={a.personId}
                 className={cn(
                   "rounded-md border border-border bg-card/60 px-3 py-2 text-sm space-y-2",
-                  busyPerson === a.personId && "opacity-60",
+                  busyPersons.has(a.personId) && "opacity-60",
                 )}
               >
                 <div className="flex items-start justify-between gap-2">
