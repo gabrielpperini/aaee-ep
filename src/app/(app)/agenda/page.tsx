@@ -6,6 +6,7 @@ import {
   PHASE_LABELS,
   PRIORITY_LABELS,
   STATUS_LABELS,
+  formatTime,
   priorityVariant,
   statusVariant,
 } from "@/lib/format";
@@ -98,10 +99,10 @@ export default async function AgendaPage({
                               Início
                             </span>
                             <span className="font-mono text-base font-semibold tabular-nums">
-                              {formatTimeOnly(e.startTime)}
+                              {formatTime(e.startTime)}
                             </span>
                             <span className="mt-0.5 text-[10px] text-muted-foreground tabular-nums">
-                              até {formatTimeOnly(e.endTime)}
+                              até {formatTime(e.endTime)}
                             </span>
                           </>
                         )}
@@ -179,10 +180,6 @@ function DayHeader({ day, count, dateLabel }: { day: number; count: number; date
       <span className="ml-auto hidden h-px flex-1 self-end bg-gradient-to-l from-transparent via-border to-border sm:block" />
     </div>
   );
-}
-
-function formatTimeOnly(d: Date) {
-  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
 function DayChip({ day, active }: { day: number | null; active: boolean }) {

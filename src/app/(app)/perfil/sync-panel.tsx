@@ -31,6 +31,7 @@ import {
   retryOp,
 } from "@/lib/db/sync-queue";
 import { isForceable } from "@/lib/sync/conflict";
+import { formatDateTime } from "@/lib/format";
 import { useOnlineStatus } from "@/lib/hooks/use-online-status";
 
 const KIND_LABEL: Record<PendingOp["kind"], string> = {
@@ -51,9 +52,9 @@ const STATUS_META: Record<
 };
 
 function fmt(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  // iso vem de toISOString() (instante UTC); formata em São Paulo (regra da
+  // plataforma), não no fuso do dispositivo — consistente com o resto da UI.
+  return formatDateTime(new Date(iso));
 }
 
 export function SyncPanel() {

@@ -13,9 +13,14 @@ import { APP_TIME_ZONE, nowDate } from "./time";
 /** Rótulo usado quando o evento ainda não tem horário definido (`timeTbd`). */
 export const TIME_TBD_LABEL = "Horário a definir";
 
+/** Hora isolada (HH:mm) pinada em São Paulo — nunca usar getHours()/toLocaleTimeString cru, que seguem o fuso do runtime (UTC em produção). */
+export function formatTime(date: Date): string {
+  return formatInTimeZone(date, APP_TIME_ZONE, "HH:mm");
+}
+
 export function formatEventTime(start: Date, end: Date, timeTbd = false): string {
   if (timeTbd) return TIME_TBD_LABEL;
-  return `${formatInTimeZone(start, APP_TIME_ZONE, "HH:mm")} – ${formatInTimeZone(end, APP_TIME_ZONE, "HH:mm")}`;
+  return `${formatTime(start)} – ${formatTime(end)}`;
 }
 
 export function formatDate(date: Date): string {

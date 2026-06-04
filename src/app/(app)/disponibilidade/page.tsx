@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { MapsLink } from "@/components/app/maps-link";
-import { ASSIGNMENT_ROLE_LABELS, COMMITTED_STATUSES, formatEventTime } from "@/lib/format";
+import { ASSIGNMENT_ROLE_LABELS, COMMITTED_STATUSES, formatEventTime, formatTime } from "@/lib/format";
 import { EP_DAY_SHORT_LABEL, formatEpDayDate } from "@/lib/ep-edition";
 import { getEpEdition } from "@/lib/ep-edition-server";
 
@@ -215,10 +215,10 @@ function ItemRow({ item }: { item: Item }) {
         ) : (
           <>
             <span className="font-mono text-base font-semibold tabular-nums">
-              {formatHour(item.startTime)}
+              {formatTime(item.startTime)}
             </span>
             <span className="text-[10px] text-muted-foreground tabular-nums">
-              até {formatHour(item.endTime)}
+              até {formatTime(item.endTime)}
             </span>
           </>
         )}
@@ -255,9 +255,4 @@ function ItemRow({ item }: { item: Item }) {
       </div>
     </article>
   );
-}
-
-function formatHour(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
